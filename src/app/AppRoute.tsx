@@ -4,7 +4,7 @@ import Welcome_page from "../pages/Welcome_page";
 import Home_Page from "../pages/Home_Page";
 import NavBar from "./NavBar";
 import FooterPage from "../components/Footer_page";
-import ServicesPage from "../pages/services_page";
+import ServicesPage from "../pages/ServicesPage";
 import Reservation_Page from "../pages/Reservation_Page";
 import PartnerSection from "../pages/PartnerSection";
 import AproposContact from "../pages/AproposContact";
