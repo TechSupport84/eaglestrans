@@ -1,0 +1,15 @@
+@keyframes carBounce {
+  0% {
+    transform: translateX(-100px);
+  }
+  50% {
+    transform: translateX(50px);
+  }
+  100% {
+    transform: translateX(-100px);
+  }
+}
+
+.animate-carBounce {
+  animation: carBounce 2s ease-in-out infinite;
+}
