@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import Welcome_page from "../pages/Welcome_page";
 import Home_Page from "../pages/Home_Page";
@@ -13,40 +13,37 @@ import PolicyPage from "./PolicyPage";
 function AppRoute() {
   const { user, loading } = useAuth(); 
 
-
   if (loading) return <p>Loading...</p>;
 
   return (
     <Router>
-        {user &&(
-            <NavBar/>
-        )}
+      {user && <NavBar />}
       <Routes>
+        <Route path="/" element={user ? <Home_Page /> : <Welcome_page />} />
+        <Route path="/home" element={user ? <Home_Page /> : <Welcome_page />} />
+        
         <Route
-          path="/"
-          element={user ? <Home_Page />  : <Welcome_page />}
+          path="/service"
+          element={user ? <ServicesPage /> : <Welcome_page />}
         />
-
         <Route
-          path="/home"
-          element={user ? <Home_Page /> : <Navigate to="/" />}
+          path="/reservation"
+          element={user ? <Reservation_Page /> : <Welcome_page />}
         />
-        {user &&(
-            <> 
-            <Route path="/service" element ={<ServicesPage/>}/>
-            <Route path="/reservation" element ={<Reservation_Page/>}/>
-            <Route path="/partner" element ={<PartnerSection/>}/>
-            <Route path="/appropos" element ={<AproposContact/>}/>
-            <Route path="/policy" element ={<PolicyPage/>}/>
-            
-            
-            </>
-        )}
+        <Route
+          path="/partner"
+          element={user ? <PartnerSection /> : <Welcome_page />}
+        />
+        <Route
+          path="/appropos"
+          element={user ? <AproposContact /> : <Welcome_page />}
+        />
+        <Route
+          path="/policy"
+          element={user ? <PolicyPage /> : <Welcome_page />}
+        />
       </Routes>
-      {user &&(
-   <FooterPage/>
-      )}
-   
+      {user && <FooterPage />}
     </Router>
   );
 }
