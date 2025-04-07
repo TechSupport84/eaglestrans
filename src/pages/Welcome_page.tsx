@@ -57,7 +57,7 @@ function Welcome_page() {
         <div className="flex items-center justify-center mt-6">
           <button
             onClick={handleGoogleLogin}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-blue-800 text-gray-800 border border-gray-300 rounded-lg shadow-lg hover:bg-gray-100 transition transform hover:scale-105"
+            className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-blue-800 text-gray-800 border border-gray-300 rounded-lg shadow-lg hover:bg-blue-800 transition transform hover:scale-105"
           >
             <BiLogoGoogle className="text-gray-300 text-2xl" />
             <span className="font-medium text-gray-200">Continuez avec Google</span>
