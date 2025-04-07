@@ -5,15 +5,15 @@ import { useState, useEffect } from "react";
 function Welcome_page() {
   const [time, setTime] = useState("");
 
-  // Function to update the time every second
+
   const updateTime = () => {
     const currentTime = new Date().toLocaleTimeString();
     setTime(currentTime);
   };
 
   useEffect(() => {
-    const interval = setInterval(updateTime, 1000); // Update time every second
-    return () => clearInterval(interval); // Cleanup interval on component unmount
+    const interval = setInterval(updateTime, 1000); 
+    return () => clearInterval(interval); 
   }, []);
 
   const handleGoogleLogin = () => {
@@ -24,7 +24,7 @@ function Welcome_page() {
     <main className="relative bg-cover bg-center min-h-screen flex flex-col justify-center">
       {/* Background image with transparency */}
       <div className="absolute top-0 left-0 w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('./logo.jpg')" }}>
-        <div className="absolute top-0 left-0 w-full h-full bg-blue-800 opacity-50"></div> {/* Transparent overlay */}
+        <div className="absolute top-0 left-0 w-full h-full bg-blue-800 opacity-50"></div> 
       </div>
 
       <div className="relative z-10 container mx-auto flex flex-col items-center justify-center h-screen px-4">

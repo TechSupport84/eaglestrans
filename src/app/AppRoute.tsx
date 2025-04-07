@@ -24,7 +24,7 @@ function AppRoute() {
       <Routes>
         <Route
           path="/"
-          element={user ? <Navigate to="/home" /> : <Welcome_page />}
+          element={user ? <Home_Page />  : <Welcome_page />}
         />
 
         <Route
