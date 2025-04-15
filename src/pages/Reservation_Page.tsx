@@ -49,7 +49,7 @@ const Reservation_Page: React.FC = () => {
           params: { pickup, destination },
         });
         const { price } = res.data;
-        setPrice(price.toFixed(0)); // Already calculated on the server
+        setPrice(price.toFixed(0)); 
       } catch {
         toast.error("Erreur lors du calcul du prix.");
       }
