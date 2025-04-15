@@ -67,8 +67,8 @@ const handledPartner =()=>{
         <button  onClick ={ handledPartner }className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto">
           Devenir Partenaire
         </button>
-        <button  onClick ={ handledPartner }className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto">
-          Appel 
+        <button className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto">
+          Appel (+225*******)
         </button>
       </div>
     </div>
