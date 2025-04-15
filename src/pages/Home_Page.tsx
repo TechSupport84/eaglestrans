@@ -27,6 +27,10 @@ const handledNavigation =()=>{
 const handledPartner =()=>{
   navigate("/partner")
 }
+
+const handleCall = () => {
+  window.location.href = 'tel:+225123456789'; // replace with your number
+};
   return user ? (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 py-6">
       {/* Promotional Section */}
@@ -64,10 +68,10 @@ const handledPartner =()=>{
         <button onClick={handledNavigation } className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 w-full md:w-auto">
           Réserver un Trajet
         </button>
-        <button  onClick ={ handledPartner }className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto">
+        <button  onClick ={ handledPartner }className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:bg-orange-700 transition duration-300 w-full md:w-auto">
           Devenir Partenaire
         </button>
-        <button className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto">
+        <button onClick={handleCall} className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto">
           Appel (+225*******)
         </button>
       </div>
