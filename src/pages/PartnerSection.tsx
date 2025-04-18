@@ -156,8 +156,8 @@ const PartnerSection: React.FC = () => {
                 <input
                   type="number"
                   className="mt-2 w-full border rounded-lg px-3 py-2 bg-gray-100"
-                  placeholder="Montant $50"
-                  value={50}
+                  placeholder="Montant $5000"
+                  value={5000}
                   disabled
                 />
               </div>
