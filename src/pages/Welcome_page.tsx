@@ -135,6 +135,7 @@ function WelcomePage() {
               <button onClick={closeLogin} className=" right-2 text-xl text-gray-500 hover:text-gray-700">X</button>
               <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">Login 🌟</h2>
               {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {localerror && <p className="text-red-500 text-sm mb-4">{localerror}</p>}
               <form onSubmit={handleLoginSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
