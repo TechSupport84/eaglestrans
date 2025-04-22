@@ -1,4 +1,4 @@
-import { API_URL } from "../constants/API_URL";
+
 import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
@@ -11,7 +11,7 @@ interface User {
 }
 
 export default function Home_Page() {
-  const { user, loading, } = useAuth() as { user: User | null; loading: boolean };
+  const { user, loading, logout  } = useAuth() as { user: User | null; loading: boolean, logout:()=>void };
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,10 +52,7 @@ const handleCall = () => {
             className="w-14 h-14 rounded-full border-2 border-gray-300"
           />
           <button
-            onClick={() => {
-              document.cookie = "token=; Max-Age=0";
-              window.location.href = `${API_URL}/auth/logout`;
-            }}
+            onClick={()=> logout ()}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300"
           >
             Déconnexion
