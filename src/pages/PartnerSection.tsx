@@ -1,30 +1,55 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent} from "react";
 import { Car, Phone, MapPin, CreditCard, BadgeDollarSign, CheckCircle } from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../constants/API_URL";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import useAuth from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const PartnerSection: React.FC = () => {
-  const [openForm, setOpenForm] = useState<boolean>(false);
-  const [accepted, setAccepted] = useState<boolean>(false);
-  const [carName, setCarName] = useState<string>("");
-  const [plaqueNumber, setPlaqueNumber] = useState<string>("");
-  const [tel, setTel] = useState<string>("");
-  const [city, setCity] = useState<string>("");
-  const [justSubmitted, setJustSubmitted] = useState<boolean>(false); // 👈 Added
+  const [accepted, setAccepted] = useState(false);
+  const [carName, setCarName] = useState("");
+  const [plaqueNumber, setPlaqueNumber] = useState("");
+  const [tel, setTel] = useState("");
+  const [city, setCity] = useState("");
+  const [justSubmitted, setJustSubmitted] = useState(false);
+  const [entrepreneuriatConfirmed, setEntrepreneuriatConfirmed] = useState(false);
+  const [error, setError] = useState<string>("");
 
-  const handleOpenForm = () => {
-    setOpenForm(!openForm);
-  };
+  const navigate = useNavigate();
+  const { user, token } = useAuth();
 
-  const handleCreatePartner = async (e: React.FormEvent) => {
+  const handleCreatePartner = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (user?.id) {
+      setError("Ce partenaire existe déjà.");
+      toast.error("Ce partenaire existe déjà.");
+      return;
+    }
+
+    if (!carName || !plaqueNumber || !tel || !city) {
+      setError("Veuillez remplir tous les champs.");
+      toast.error("Veuillez remplir tous les champs.");
+      return;
+    }
+
     try {
       await axios.post(
         `${API_URL}/api/partner/create-partner`,
-        { carName, plaqueNumber, tel, city },
-        { withCredentials: true }
+        {
+          carName,
+          plaqueNumber: Number(plaqueNumber),
+          tel,
+          city,
+          amount: 7000,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setCarName("");
@@ -32,163 +57,167 @@ const PartnerSection: React.FC = () => {
       setTel("");
       setCity("");
       setAccepted(false);
-      setOpenForm(false);
-      setJustSubmitted(true); // 👈 trigger toast after render
-    } catch (error) {
+      setJustSubmitted(true);
+      setError("");
+
+      toast.success("Félicitations ! Contactez notre secrétaire pour effectuer le paiement.");
+      navigate("/confirmed");
+    } catch (err) {
+      setError("Une erreur est survenue. Veuillez réessayer.");
       toast.error("Une erreur est survenue. Veuillez réessayer.");
-      console.error(error);
+      console.error(err);
     }
   };
 
-  // ✅ Trigger success toast after successful form submission
   useEffect(() => {
     if (justSubmitted) {
-      toast.success(
-        "Félicitations, vous êtes partenaire ! Veuillez procéder au paiement pour que nous puissions valider votre inscription."
-      );
+      toast.success("Contactez notre secrétaire pour enregistrer votre véhicule.");
       setJustSubmitted(false);
     }
   }, [justSubmitted]);
 
   return (
-    <section className="flex flex-col items-center text-center bg-gray-100 py-12 px-6 rounded-lg shadow-lg">
-      <motion.h2
-        className="text-3xl font-bold text-blue-700 mb-4"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        Devenir Partenaire
-      </motion.h2>
+    <section className="flex flex-col md:flex-row items-start justify-center gap-10 bg-gray-100 p-8 md:p-16 rounded-lg shadow-xl">
+      {/* Text Section */}
+      <div className="md:w-1/2 space-y-6">
+        <motion.h2
+          className="text-4xl font-bold text-blue-700"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          Devenir Partenaire
+        </motion.h2>
+        <p className="text-gray-700 text-lg">
+          Vous êtes propriétaire d’un véhicule ou chauffeur expérimenté ? Rejoignez <span className="font-semibold">EAGLE'S TRANS</span> et maximisez vos revenus !
+        </p>
+        <ul className="text-gray-600 space-y-2">
+          <li className="flex items-center gap-2">
+            <span className="text-green-600 text-lg">✔</span> Des trajets réguliers
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-green-600 text-lg">✔</span> Un accompagnement professionnel
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="text-green-600 text-lg">✔</span> Des paiements transparents et rapides
+          </li>
+        </ul>
+      </div>
 
-      <p className="text-gray-700 max-w-2xl">
-        Vous êtes propriétaire d’un véhicule ou chauffeur expérimenté ? Rejoignez{" "}
-        <span className="font-semibold">EAGLE'S TRANS</span> et maximisez vos revenus !
-      </p>
+      {/* Form Section */}
+      <div className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-lg">
+        <h3 className="text-2xl font-bold text-center text-green-700 mb-6">Formulaire d'inscription</h3>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 mb-4 rounded">
+            {error}
+          </div>
+        )}
 
-      <ul className="text-gray-600 mt-4 space-y-2">
-        <li className="flex items-center gap-2">
-          <span className="text-green-600 text-lg">✔</span> Des trajets réguliers
-        </li>
-        <li className="flex items-center gap-2">
-          <span className="text-green-600 text-lg">✔</span> Un accompagnement professionnel
-        </li>
-        <li className="flex items-center gap-2">
-          <span className="text-green-600 text-lg">✔</span> Des paiements transparents et rapides
-        </li>
-      </ul>
+        <form onSubmit={handleCreatePartner} className="space-y-4">
+          <div className="flex items-center border rounded-lg px-3 py-2">
+            <Car className="text-gray-500 mr-2" />
+            <input
+              type="text"
+              value={carName}
+              onChange={(e) => setCarName(e.target.value)}
+              placeholder="Le nom du véhicule"
+              className="w-full outline-none"
+            />
+          </div>
 
-      <motion.button
-        onClick={handleOpenForm}
-        className="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        Devenir Partenaire
-      </motion.button>
+          <div className="flex items-center border rounded-lg px-3 py-2">
+            <BadgeDollarSign className="text-gray-500 mr-2" />
+            <input
+              type="text"
+              value={plaqueNumber}
+              onChange={(e) => setPlaqueNumber(e.target.value)}
+              placeholder="Numéro de plaque"
+              className="w-full outline-none"
+            />
+          </div>
 
-      {openForm && (
-        <div className="max-w-xl mx-auto p-6 bg-white shadow-xl rounded-xl mt-10 space-y-6">
-          <h1 className="text-2xl font-bold text-center text-green-700">Remplir ce formulaire</h1>
+          <div className="flex items-center border rounded-lg px-3 py-2">
+            <Phone className="text-gray-500 mr-2" />
+            <input
+              type="tel"
+              value={tel}
+              onChange={(e) => setTel(e.target.value)}
+              placeholder="Téléphone"
+              className="w-full outline-none"
+            />
+          </div>
 
-          <form className="space-y-4" onSubmit={handleCreatePartner}>
-            <div className="flex items-center border rounded-lg px-3 py-2">
-              <Car className="text-gray-500 mr-2" />
-              <input
-                type="text"
-                value={carName}
-                className="w-full border-none outline-none"
-                placeholder="Le nom du véhicule"
-                onChange={(e) => setCarName(e.target.value)}
-                required
-              />
-            </div>
+          <div className="flex items-center border rounded-lg px-3 py-2">
+            <MapPin className="text-gray-500 mr-2" />
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Ville"
+              className="w-full outline-none"
+            />
+          </div>
 
-            <div className="flex items-center border rounded-lg px-3 py-2">
-              <BadgeDollarSign className="text-gray-500 mr-2" />
-              <input
-                type="text"
-                value={plaqueNumber}
-                className="w-full border-none outline-none"
-                placeholder="Numéro de plaque d'immatriculation"
-                onChange={(e) => setPlaqueNumber(e.target.value)}
-                required
-              />
-            </div>
+          <div className="bg-gray-50 p-4 rounded-lg border">
+            <h4 className="flex items-center font-semibold text-gray-800 mb-2">
+              <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+              Conditions de partenariat
+            </h4>
+            <p className="text-sm text-gray-700 mb-2">
+              Pour devenir partenaire, vous devez payer une somme d'argent. Vous ne gagnerez de l'argent que lorsque votre véhicule sera commandé.
+            </p>
 
-            <div className="flex items-center border rounded-lg px-3 py-2">
-              <Phone className="text-gray-500 mr-2" />
-              <input
-                type="tel"
-                value={tel}
-                className="w-full border-none outline-none"
-                placeholder="Votre numéro de téléphone"
-                onChange={(e) => setTel(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="flex items-center border rounded-lg px-3 py-2">
-              <MapPin className="text-gray-500 mr-2" />
-              <input
-                type="text"
-                value={city}
-                className="w-full border-none outline-none"
-                placeholder="Votre ville"
-                onChange={(e) => setCity(e.target.value)}
-                required
-              />
-            </div>
-
-            <section className="mt-6 bg-gray-50 p-4 rounded-lg border space-y-3">
-              <h2 className="flex items-center font-semibold text-gray-800">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                Conditions de partenariat
-              </h2>
-              <p className="text-sm text-gray-700">
-                Pour devenir partenaire, vous devez payer une somme d'argent. Vous ne gagnerez de l'argent que lorsque votre véhicule sera commandé par un(e) client(e).
-              </p>
-
-              <div>
-                <h3 className="text-md font-semibold text-gray-700 flex items-center">
-                  <CreditCard className="w-4 h-4 mr-2" /> Paiement
-                </h3>
-                <input
-                  type="number"
-                  className="mt-2 w-full border rounded-lg px-3 py-2 bg-gray-100"
-                  placeholder="Montant $5000"
-                  value={5000}
-                  disabled
-                />
-              </div>
-
-              <label className="flex items-center mt-4 text-sm text-gray-800">
-                <input
-                  type="checkbox"
-                  className="mr-2 h-4 w-4 text-green-600"
-                  checked={accepted}
-                  onChange={() => setAccepted(!accepted)}
-                />
-                J'accepte les conditions de partenariat.
+            <div className="mb-3">
+              <label className="flex items-center font-medium text-gray-700 mb-1">
+                <CreditCard className="w-4 h-4 mr-2" />
+                Paiement
               </label>
-            </section>
+              <input
+                type="number"
+                value={8000}
+                disabled
+                className="w-full px-3 py-2 bg-gray-100 border rounded-lg"
+              />
+            </div>
 
-            <motion.button
-              type="submit"
-              disabled={!accepted}
-              className={`w-full mt-6 px-6 py-3 rounded-lg font-semibold shadow-md transition duration-300 ${
-                accepted
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
-              whileHover={accepted ? { scale: 1.05 } : {}}
-              whileTap={accepted ? { scale: 0.95 } : {}}
-            >
-              Confirmez
-            </motion.button>
-          </form>
-        </div>
-      )}
+            <label className="flex items-center text-sm text-gray-800">
+              <input
+                type="checkbox"
+                className="mr-2 h-4 w-4 text-green-600"
+                checked={accepted}
+                onChange={() => setAccepted(!accepted)}
+              />
+              J'accepte les conditions de partenariat.
+            </label>
+
+            <label className="flex items-center text-sm text-gray-800 mt-2">
+              <input
+                type="checkbox"
+                className="mr-2 h-4 w-4 text-green-600"
+                checked={entrepreneuriatConfirmed}
+                onChange={() => setEntrepreneuriatConfirmed(!entrepreneuriatConfirmed)}
+              />
+              Je confirme mon entrepreneuriat.
+            </label>
+          </div>
+
+          <motion.button
+            type="submit"
+            disabled={!accepted || !entrepreneuriatConfirmed}
+            className={`w-full mt-4 px-6 py-3 font-semibold rounded-lg shadow-md transition ${
+              accepted && entrepreneuriatConfirmed
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+            whileHover={accepted && entrepreneuriatConfirmed ? { scale: 1.05 } : {}}
+            whileTap={accepted && entrepreneuriatConfirmed ? { scale: 0.95 } : {}}
+          >
+            Confirmez
+          </motion.button>
+        </form>
+        <ToastContainer />
+      </div>
     </section>
   );
 };

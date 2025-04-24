@@ -59,6 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [token]);
 
   const login = async (email: string, password: string) => {
+    setLoading(true);
     try {
       const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
@@ -71,9 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userResponse = await axios.get(`${API_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+ 
       setUser(userResponse.data.user);
     } catch (error) {
       console.error('Login error:', error);
+      setLoading(false)
       
     }
   };

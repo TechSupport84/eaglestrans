@@ -9,6 +9,7 @@ import Reservation_Page from "../pages/Reservation_Page";
 import PartnerSection from "../pages/PartnerSection";
 import AproposContact from "../pages/AproposContact";
 import PolicyPage from "./PolicyPage";
+import ConfirmedPartner from "../pages/ConfirmedPartner";
 
 function AppRoute() {
   const { user, loading } = useAuth(); 
@@ -37,6 +38,7 @@ function AppRoute() {
             <Route path="/partner" element={<PartnerSection />} />
             <Route path="/appropos" element={<AproposContact />} />
             <Route path="/policy" element={<PolicyPage />} />
+            <Route path="/confirmed" element={<ConfirmedPartner/>}/>
           </>
         )}
       </Routes>

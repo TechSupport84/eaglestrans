@@ -19,7 +19,7 @@ function WelcomePage() {
   const [picture, setPicture] = useState<string>(""); 
   const [role, setRole] = useState<Role | "">(""); 
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const { login, register ,error} = useAuth();
+  const { login, register ,error, loading} = useAuth();
   const navigate = useNavigate();
 
   const updateTime = () => {
@@ -39,6 +39,9 @@ function WelcomePage() {
     if (!email || !password) {
       setError("Email and password are required");
       return;
+    }
+    if(!email){
+      return setError("User with this mail  don't  exist !")
     }
 
     login(email, password);
@@ -113,11 +116,12 @@ function WelcomePage() {
 
         <div className="flex items-center justify-center mt-6 space-x-4">
           <button
-            onClick={handleOpenLogin}
+            onClick={handleOpenLogin }
             className="flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-blue-800 text-gray-800 border border-gray-300 rounded-lg shadow-lg hover:bg-blue-800 transition transform hover:scale-105"
           >
             <BiLogInCircle className="text-gray-300 text-2xl" />
-            <span className="font-medium text-gray-200">Login</span>
+            <span className="font-medium text-gray-200">{loading ? "Loading..." : "Login"}
+            </span>
           </button>
 
           <button
