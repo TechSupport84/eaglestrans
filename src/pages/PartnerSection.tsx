@@ -43,7 +43,7 @@ const PartnerSection: React.FC = () => {
           plaqueNumber:String(plaqueNumber),
           tel,
           city,
-          amount: 7000,
+          amount: 8000,
         },
         {
           headers: {
