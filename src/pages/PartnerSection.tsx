@@ -136,7 +136,7 @@ const PartnerSection: React.FC = () => {
               type="text"
               value={plaqueNumber}
               onChange={(e) => setPlaqueNumber(e.target.value)}
-              placeholder="Numéro de plaque"
+              placeholder="Numéro de plaque Ex: D4T4 (4 digits)"
               className="w-full outline-none"
             />
           </div>
