@@ -26,7 +26,7 @@ const PartnerSection: React.FC = () => {
 
     if (!/^(?=(?:.*[a-zA-Z]){2})(?=(?:.*\d){2})[a-zA-Z\d]{4}$/.test(plaqueNumber)) {
       setError("Le numéro de plaque (PIM) doit contenir exactement 2 lettres et 2 chiffres mélangés (ex: A1B2 ou 1A2B).");
-      toast.error("Le numéro de plaque (PIM) doit contenir exactement 2 lettres et 2 chiffres mélangés (ex: A1B2 ou 1A2B).");
+     
       return;
     }
 
