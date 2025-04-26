@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import axios from "axios";
 import { API_URL } from "../constants/API_URL";
+import { toast, ToastContainer } from "react-toastify";
 
 interface User {
   _id: string;
@@ -55,7 +56,7 @@ const InvalidConfirmedPartner: React.FC = () => {
         setToConfirmPartner((prevPartners) =>
           prevPartners.filter((partner) => partner.partnerID !== partnerId)
         );
-        alert("Partner confirmed successfully!");
+        toast.success("Partner confirmed successfully!")
         setIsModalOpen(false); // Close the modal after confirmation
       } else {
         alert("Error confirming partner.");
@@ -192,6 +193,7 @@ const InvalidConfirmedPartner: React.FC = () => {
           </div>
         </div>
       )}
+      <ToastContainer/>
     </main>
   );
 };

@@ -55,7 +55,7 @@ const ConfirmedPartnersPage: React.FC = () => {
           <thead>
             <tr>
               <th className="border px-4 py-2">Partner ID</th>
-              <th className="border px-4 py-2">User</th>
+              <th className="border px-4 py-2">Admin Info</th>
               <th className="border px-4 py-2">Token Money</th>
               <th className="border px-4 py-2">Amount</th>
               <th className="border px-4 py-2">Start Date</th>
