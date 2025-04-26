@@ -51,7 +51,7 @@ const ReservationPage: React.FC = () => {
   const [dropSuggestions, setDropSuggestions] = useState<string[]>([]);
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const { user, token } = useAuth();
-
+  const [loading, setLoading] = useState<boolean>(false)
   const pickupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -123,6 +123,7 @@ const ReservationPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true)
     try {
       await axios.post(
         `${API_URL}/api/order/create`,
@@ -133,8 +134,10 @@ const ReservationPage: React.FC = () => {
       setPickup("");
       setDrop("");
       loadReservation();
+      setLoading(false)
     } catch {
       toast.error("Échec de la réservation.");
+      setLoading(false)
     }
   };
 
@@ -289,7 +292,7 @@ const ReservationPage: React.FC = () => {
             type="submit"
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
           >
-            <AiOutlineUser size={20} /> Réserver maintenant
+            <AiOutlineUser size={20} /> {loading?"Commande en cours..." :"Réserver maintenant"}
           </button>
         </form>
       </div>

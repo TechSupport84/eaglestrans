@@ -11,6 +11,7 @@ import AproposContact from "../pages/AproposContact";
 import PolicyPage from "./PolicyPage";
 import ConfirmedPartner from "../pages/ConfirmedPartner";
 import Dashboard from "../screens/Dashboard";
+import SuccessPage from "../pages/SuccessPage";
 
 function AppRoute() {
   const { user, loading } = useAuth(); 
@@ -40,6 +41,7 @@ function AppRoute() {
             <Route path="/appropos" element={<AproposContact />} />
             <Route path="/policy" element={<PolicyPage />} />
             <Route path="/confirmed" element={<ConfirmedPartner/>}/>
+            <Route path="/success"element = {<SuccessPage/>}/>
 
             {user.role  ==="admin" &&(
               <Route path="/dashboard" element ={<Dashboard/>}/>

@@ -16,6 +16,7 @@ const PartnerSection: React.FC = () => {
   const [justSubmitted, setJustSubmitted] = useState(false);
   const [entrepreneuriatConfirmed, setEntrepreneuriatConfirmed] = useState(false);
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false)
 
   const navigate = useNavigate();
   const {  token } = useAuth();
@@ -34,7 +35,8 @@ const PartnerSection: React.FC = () => {
       toast.error("Veuillez remplir tous les champs.");
       return;
     }
-
+  
+    setLoading(true)
     try {
       await axios.post(
         `${API_URL}/api/partner/create-partner`,
@@ -51,7 +53,7 @@ const PartnerSection: React.FC = () => {
           },
         }
       );
-
+     
       setCarName("");
       setPlaqueNumber("");
       setTel("");
@@ -59,12 +61,14 @@ const PartnerSection: React.FC = () => {
       setAccepted(false);
       setJustSubmitted(true);
       setError("");
-
+      setLoading(false)
+    
       toast.success("Félicitations ! Contactez notre secrétaire pour effectuer le paiement.");
       navigate("/confirmed");
     } catch (err) {
       setError("Une erreur est survenue. Veuillez réessayer.");
       toast.error("Une erreur est survenue. Veuillez réessayer.");
+      setLoading(false)
       console.error(err);
     }
   };
@@ -204,7 +208,7 @@ const PartnerSection: React.FC = () => {
 
           <motion.button
             type="submit"
-            disabled={!accepted || !entrepreneuriatConfirmed}
+            disabled={loading || !accepted || !entrepreneuriatConfirmed}
             className={`w-full mt-4 px-6 py-3 font-semibold rounded-lg shadow-md transition ${
               accepted && entrepreneuriatConfirmed
                 ? "bg-green-600 text-white hover:bg-green-700"
@@ -213,7 +217,7 @@ const PartnerSection: React.FC = () => {
             whileHover={accepted && entrepreneuriatConfirmed ? { scale: 1.05 } : {}}
             whileTap={accepted && entrepreneuriatConfirmed ? { scale: 0.95 } : {}}
           >
-            Confirmez
+          {loading ? "Chargement..." : "Confirmez"}
           </motion.button>
         </form>
         <ToastContainer />
