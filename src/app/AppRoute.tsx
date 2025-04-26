@@ -10,11 +10,12 @@ import PartnerSection from "../pages/PartnerSection";
 import AproposContact from "../pages/AproposContact";
 import PolicyPage from "./PolicyPage";
 import ConfirmedPartner from "../pages/ConfirmedPartner";
+import Dashboard from "../screens/Dashboard";
 
 function AppRoute() {
   const { user, loading } = useAuth(); 
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p className="text-center text-2xl text-blue-800">Loading...</p>;
 
   return (
     <Router>
@@ -39,6 +40,10 @@ function AppRoute() {
             <Route path="/appropos" element={<AproposContact />} />
             <Route path="/policy" element={<PolicyPage />} />
             <Route path="/confirmed" element={<ConfirmedPartner/>}/>
+
+            {user.role  ==="admin" &&(
+              <Route path="/dashboard" element ={<Dashboard/>}/>
+            )}
           </>
         )}
       </Routes>

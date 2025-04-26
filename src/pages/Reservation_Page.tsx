@@ -3,12 +3,11 @@ import {
   FaMapMarkerAlt,
   FaRoute,
   FaClock,
-  FaCar,
-  FaPhoneAlt,
-  FaTrash
+  FaCheckCircle,
+  FaTimesCircle
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import useAuth from "../hooks/useAuth";
 import { API_URL } from "../constants/API_URL";
@@ -45,232 +44,258 @@ export interface Reservation {
   __v: number;
 }
 
-const Reservation_Page: React.FC = () => {
-  const [pickupLocation, setPickupLocation] = useState("");
-  const [dropLocation, setDropLocation] = useState("");
-  const [duration, setDuration] = useState("");
-  const [error, setError] = useState("");
-  const [reservationOrder, setReservation] = useState<Reservation | null>(null);
+const ReservationPage: React.FC = () => {
+  const [pickup, setPickup] = useState("");
+  const [drop, setDrop] = useState("");
+  const [pickupSuggestions, setPickupSuggestions] = useState<string[]>([]);
+  const [dropSuggestions, setDropSuggestions] = useState<string[]>([]);
+  const [reservation, setReservation] = useState<Reservation | null>(null);
   const { user, token } = useAuth();
 
+  const pickupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dropTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-
-
-
-  const handleconfirm = async()=>{
+  const fetchSuggestions = async (
+    query: string,
+    setter: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
     try {
-      const deleted= await axios.delete(`${API_URL}/api/order/delete`,{headers:{
-        Authorization:`Bearer ${token}`
-      }})
-      if(deleted)return toast.success("Order Confirmed")
-    } catch (error) {
-      toast.error("Error")
-    }
-  }
-  useEffect(() => {
-    const getCurrentUserOrder = async () => {
-      if (!user?.id || !token) return;
-
-      try {
-        const response = await axios.get(`${API_URL}/api/order/user/${user.id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        console.log("Fetched reservation:", response.data);
-
-        // Check if the data is an object (not an array)
-        const reservation: Reservation = response.data;
-        if (reservation && Object.keys(reservation).length > 0) {
-          setReservation(reservation);
-        } else {
-          setError("Aucune réservation trouvée.");
-        }
-      } catch (error) {
-        setError("Aucune réservation trouvée.")
-        }
-    };
- 
-    getCurrentUserOrder();
-
-  }, [user?.id, token, reservationOrder]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const durationNumber = Number(duration);
-    if (isNaN(durationNumber) || durationNumber <= 0) {
-      toast.error("Durée invalide.");
-      return;
-    }
-
-    try {
-      await axios.post(
-        `${API_URL}/api/order/create`,
-        {
-          pickupLocation,
-          dropLocation,
-          duration: durationNumber,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(
+          query
+        )}`
       );
-
-      setPickupLocation("");
-      setDropLocation("");
-      setDuration("");
-      toast.success("Réservation effectuée avec succès !");
-   
-    } catch (error) {
-      toast.error("Erreur lors de la réservation.");
+      const data = await res.json();
+      setter(data.map((item: any) => item.display_name));
+    } catch {
+      setter([]);
     }
   };
 
+  useEffect(() => {
+    if (pickup.length < 3) {
+      setPickupSuggestions([]);
+      return;
+    }
+    if (pickupTimer.current) clearTimeout(pickupTimer.current);
+    pickupTimer.current = setTimeout(() => {
+      fetchSuggestions(pickup, setPickupSuggestions);
+    }, 300);
+  }, [pickup]);
+
+  useEffect(() => {
+    if (drop.length < 3) {
+      setDropSuggestions([]);
+      return;
+    }
+    if (dropTimer.current) clearTimeout(dropTimer.current);
+    dropTimer.current = setTimeout(() => {
+      fetchSuggestions(drop, setDropSuggestions);
+    }, 300);
+  }, [drop]);
+
+  const selectPickup = (place: string) => {
+    setPickup(place);
+    setPickupSuggestions([]);
+  };
+
+  const selectDrop = (place: string) => {
+    setDrop(place);
+    setDropSuggestions([]);
+  };
+
+  const loadReservation = async () => {
+    if (!user?.id || !token) return;
+    try {
+      const { data } = await axios.get<Reservation>(
+        `${API_URL}/api/order/user/${user.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReservation(data);
+    } catch {
+      setReservation(null);
+    }
+  };
+
+  useEffect(() => {
+    loadReservation();
+  }, [user, token]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await axios.post(
+        `${API_URL}/api/order/create`,
+        { pickupLocation: pickup, dropLocation: drop },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Réservation effectuée !");
+      setPickup("");
+      setDrop("");
+      loadReservation();
+    } catch {
+      toast.error("Échec de la réservation.");
+    }
+  };
+
+  const handleAccept = async () => {
+    if (!reservation) return;
+    try {
+      const { data } = await axios.put(
+        `${API_URL}/api/order/${reservation._id}/accept`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Commande acceptée !");
+      setReservation(data.order);
+    } catch {
+      toast.error("Échec de l'acceptation.");
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!reservation) return;
+    try {
+      const { data } = await axios.put(
+        `${API_URL}/api/order/${reservation._id}/complete`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Commande terminée !");
+      setReservation(data.order);
+    } catch {
+      toast.error("Échec de la complétion.");
+    }
+  };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 py-10">
-    <section className="text-center mb-10">
-      <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700">Réservation Rapide</h1>
-      <p className="text-gray-600 mt-2 text-sm md:text-base">
-        Départ, destination et confort en un clic. Votre trajet commence ici !
-      </p>
-    </section>
-  
-    {/* Rider Trace Section */}
-    <div className="w-full max-w-5xl bg-white rounded-xl shadow-xl p-6">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-        <FaCar className="text-green-500" /> Suivi de Réservation
-      </h2>
-  
-      {reservationOrder === null ? (
-        <p className="text-red-500">{error}</p>
-      ) : (
+    <main className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
+      {reservation && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-4 border border-blue-100 rounded-lg p-4 bg-blue-50"
+          className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-6 mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex items-center space-x-2">
-            <motion.span
-              className="inline-block w-3 h-3 bg-green-500 rounded-full"
-              animate={{ scale: [1, 1.5, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-            />
-            <span className="text-lg font-semibold text-green-700">Trajet en cours...</span>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <FaClock /> Statut de la commande
+            </h2>
+            <span
+              className={`px-3 py-1 font-semibold rounded-full text-sm uppercase ${
+                reservation.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                reservation.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                'bg-yellow-100 text-yellow-800'
+              }`}
+            >
+              {reservation.status}
+            </span>
           </div>
-  
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700">
-            <div className="flex items-center gap-2">
-              <FaMapMarkerAlt className="text-blue-500" />
-              <p><strong>Départ :</strong> {reservationOrder.pickupLocation}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
+            <div>
+              <p className="flex items-center gap-2">
+                <FaMapMarkerAlt className="text-blue-500" />
+                <strong>Départ :</strong> {reservation.pickupLocation}
+              </p>
+              <p className="flex items-center gap-2 mt-2">
+                <FaRoute className="text-purple-500" />
+                <strong>Destination :</strong> {reservation.dropLocation}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <FaRoute className="text-purple-500" />
-              <p><strong>Destination :</strong> {reservationOrder.dropLocation}</p>
+            <div>
+              <p><strong>Durée :</strong> {reservation.duration} min</p>
+              <p className="mt-2"><strong>Prix :</strong> {reservation.price.toLocaleString()} FCFA</p>
             </div>
-            <div className="flex items-center gap-2">
-              <FaClock className="text-yellow-500" />
-              <p><strong>Durée :</strong> {reservationOrder.duration} min</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <FaCar className="text-pink-500" />
-              <p><strong>Véhicule :</strong> {reservationOrder.partner.carName} <span className="text-orange-800">IM: <span className="text-green-800">({reservationOrder.partner.plaqueNumber})</span></span></p>
-            </div>
-            <div className="flex items-center gap-2">
-              <FaPhoneAlt className="text-green-600" />
-              <p><strong>Conducteur Tél:</strong> {reservationOrder.partner.tel}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <AiOutlineUser className="text-indigo-500" />
-              <p><strong>Moi :</strong> {reservationOrder.userId.username}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <p><strong>Prix :</strong> {reservationOrder.price.toLocaleString()} FCFA</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <p><strong>Date :</strong> {new Date(reservationOrder.createdAt).toLocaleString()}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <p><strong>Status :</strong> <span className="text-green-500">{reservationOrder.status}</span></p>
-            </div>
-            <div className="text flex gap-4 items-center">
-  <button  onClick ={handleconfirm} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-    <FaClock className="text-xl" />
-    Confirm
-  </button>
-
-  <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-    <FaTrash className="text-xl" />
-    Delete
-  </button>
-</div>
- 
+          </div>
+          <div className="mt-6 pt-4 border-t border-gray-200 text-gray-700">
+            <h3 className="text-lg font-semibold mb-2">Détails du partenaire</h3>
+            <p><strong>Véhicule :</strong> {reservation.partner.carName}</p>
+            <p><strong>Immatriculation :</strong> {reservation.partner.plaqueNumber}</p>
+            <p><strong>Téléphone :</strong> {reservation.partner.tel}</p>
+            <p><strong>Ville :</strong> {reservation.partner.city}</p>
+          </div>
+          <div className="mt-6 text-center flex justify-center gap-4">
+            {reservation.status === 'pending' && (
+              <button
+                onClick={handleAccept}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+              >
+                <FaCheckCircle /> Accepter
+              </button>
+            )}
+            {reservation.status === 'accepted' && (
+              <button
+                onClick={handleComplete}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <FaTimesCircle /> Terminer
+              </button>
+            )}
           </div>
         </motion.div>
       )}
-    </div>
-  
-    {/* Booking Form Section */}
-    <div className="w-full max-w-5xl bg-white rounded-xl shadow-lg p-6 mt-12 flex flex-col md:flex-row gap-6">
-      <form onSubmit={handleSubmit} className="w-full md:w-1/2 flex flex-col gap-4">
-        {[{
-          icon: <FaMapMarkerAlt className="text-blue-500" />,
-          value: pickupLocation,
-          setValue: setPickupLocation,
-          placeholder: "Point de départ"
-        }, {
-          icon: <FaRoute className="text-purple-500" />,
-          value: dropLocation,
-          setValue: setDropLocation,
-          placeholder: "Destination"
-        }, {
-          icon: <FaClock className="text-yellow-500" />,
-          value: duration,
-          setValue: setDuration,
-          placeholder: "Durée (en minutes)"
-        }].map(({ icon, value, setValue, placeholder }, idx) => (
-          <div key={idx} className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-white shadow-sm">
-            {icon}
+      {/* Booking Form */}
+      <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-2xl font-bold mb-6">Nouvelle Réservation</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Point de départ</label>
             <input
               type="text"
-              placeholder={placeholder}
-              className="w-full ml-2 focus:outline-none"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
+              value={pickup}
+              onChange={(e) => setPickup(e.target.value)}
+              placeholder="Entrez votre point de départ"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
               required
             />
+            {pickupSuggestions.length > 0 && (
+              <ul className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto">
+                {pickupSuggestions.map((place, idx) => (
+                  <li
+                    key={idx}
+                    onClick={() => selectPickup(place)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {place}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        ))}
-  
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center gap-2"
-        >
-          <AiOutlineUser size={20} /> Réservez Maintenant
-        </button>
-      </form>
-  
-      <motion.div
-        className="w-full md:w-1/2 flex justify-center items-center"
-        animate={{ scale: [1, 1.05, 1] }}
-        transition={{ repeat: Infinity, duration: 2 }}
-      >
-        <img
-          src="/hatchback.png"
-          alt="Véhicule"
-          className="w-full max-w-md rounded-lg shadow-xl"
-        />
-      </motion.div>
-    </div>
-  
-    <ToastContainer />
-  </main>
-  
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Destination</label>
+            <input
+              type="text"
+              value={drop}
+              onChange={(e) => setDrop(e.target.value)}
+              placeholder="Entrez votre destination"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
+              required
+            />
+            {dropSuggestions.length > 0 && (
+              <ul className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto">
+                {dropSuggestions.map((place, idx) => (
+                  <li
+                    key={idx}
+                    onClick={() => selectDrop(place)}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {place}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
+          >
+            <AiOutlineUser size={20} /> Réserver maintenant
+          </button>
+        </form>
+      </div>
+      <ToastContainer position="bottom-right" />
+    </main>
   );
 };
 
-export default Reservation_Page;
+export default ReservationPage;

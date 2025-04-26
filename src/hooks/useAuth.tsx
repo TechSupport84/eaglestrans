@@ -6,9 +6,9 @@ interface User {
   id: string;
   username: string;
   email: string;
-  picture: string;
   city: string;
   country: string;
+  role:string,
 }
 
 interface AuthContextType {
@@ -17,7 +17,7 @@ interface AuthContextType {
   loading: boolean;
   error:string,
   login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, picture: string, city: string, country: string, password: string, role:string) => Promise<void>;
+  register: (username: string, email: string, city: string, country: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -61,36 +61,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
-        email,
-        password,
-      });
+      const response = await axios.post(`${API_URL}/api/auth/login`, { email, password });
       const { token } = response.data;
       localStorage.setItem('token', token);
       setToken(token);
-
+  
       const userResponse = await axios.get(`${API_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
- 
-      setUser(userResponse.data.user);
+  
+      const userData = userResponse.data.user;
+      if (userData?.role) {
+        setUser(userData);
+      } else {
+        console.warn("User role not received!");
+      }
     } catch (error) {
       console.error('Login error:', error);
-      setLoading(false)
-      
+    } finally {
+      setLoading(false);
     }
   };
+  
 
-  const register = async (username: string, email: string, picture: string, city: string, country: string, password: string, role:string) => {
+  const register = async (username: string, email: string, city: string, country: string, password: string) => {
     try {
      await axios.post(`${API_URL}/api/auth/register`, {
         username,
         email,
-        picture,
         city,
         country,
         password,
-        role,
+      
       });
 
     } catch (error:any) {

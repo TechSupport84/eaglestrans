@@ -1,15 +1,90 @@
-import React from 'react';
-import { FaCheckCircle, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaMoneyBillWave } from 'react-icons/fa';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import {
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaMoneyBillWave,
+} from 'react-icons/fa';
+import { API_URL } from '../constants/API_URL';
+import useAuth from '../hooks/useAuth';
+
+interface Partners {
+  partnerID: string;
+  plaqueNumber: number;
+}
 
 const ConfirmedPartner: React.FC = () => {
+  const [currentPartner, setCurrentPartner] = useState<Partners | null>(null);
+  const [error, setError] = useState<string>('');
+  const { token } = useAuth();
+
+  const [copied, setCopied] = useState(false);
+
+const handleCopy = () => {
+  navigator.clipboard.writeText(currentPartner?.partnerID || "");
+  setCopied(true);
+  setTimeout(() => setCopied(false), 2000);
+};
+
+  useEffect(() => {
+    const getCurrentPartner = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/partner/current-partner`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const partnerData: Partners = response.data.currenctParners;
+        console.log(response.data.currenctParners);
+
+        if (partnerData && Object.keys(partnerData).length > 0) {
+          setCurrentPartner(partnerData);
+        } else {
+          setError('Aucune réservation trouvée.');
+        }
+      } catch (err) {
+        setError("Une erreur s'est produite lors de la récupération des données.");
+      }
+    };
+
+    getCurrentPartner();
+  }, [token]);
+
   return (
     <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-xl mt-10">
       <h2 className="text-3xl font-bold text-green-700 mb-4 text-center">Félicitations !</h2>
 
+      {currentPartner === null ? (
+        <p className="text-red-500 text-center">{error}</p>
+      ) : (
+        <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg mb-6">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-4">Votre Information</h3>
+          <div className="space-y-2 text-gray-700">
+          <div className="flex items-center gap-2">
+          <p><strong>ID Partenaire:</strong> {currentPartner.partnerID}</p>
+          <button
+            onClick={handleCopy}
+            className="bg-gray-600 hover:bg-gray-800 text-white text-sm px-2 py-1 rounded transition duration-200"
+          >
+            {copied ? "Copié!" : "Copier"}
+          </button>
+        </div>
+
+            <p><strong>Plaque d'immatriculation:</strong> {currentPartner.plaqueNumber}</p>
+            <p className="text-sm text-yellow-600 mt-2">
+              NB : Copiez votre ID <strong>{currentPartner.partnerID}</strong> et présentez-le à notre bureau pour valider votre statut.
+            </p>
+          </div>
+        </div>
+      )}
+
       <p className="text-xl text-red-700 font-semibold text-center mb-2">Lisez Attentivement</p>
 
       <p className="text-gray-700 mb-4 text-justify">
-        Veuillez effectuer un paiement de <strong className="text-green-600">8 000 FCFA</strong> dans notre bureau pour finaliser votre enregistrement dans le système. 
+        Veuillez effectuer un paiement de <strong className="text-green-600">8 000 FCFA</strong> dans notre bureau pour finaliser votre enregistrement dans le système.
         <br />
         <strong className="text-red-600">Ce paiement devra être effectué à la fin de chaque mois.</strong> En cas de non-paiement, votre <strong>statut</strong> sera désactivé.
       </p>

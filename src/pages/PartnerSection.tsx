@@ -18,16 +18,16 @@ const PartnerSection: React.FC = () => {
   const [error, setError] = useState<string>("");
 
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const {  token } = useAuth();
 
   const handleCreatePartner = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (user?.id) {
-      setError("Ce partenaire existe déjà.");
-      toast.error("Ce partenaire existe déjà.");
-      return;
-    }
+    // if (user?.id) {
+    //   setError("Ce partenaire existe déjà.");
+    //   toast.error("Ce partenaire existe déjà.");
+    //   return;
+    // }
 
     if (!carName || !plaqueNumber || !tel || !city) {
       setError("Veuillez remplir tous les champs.");
@@ -40,7 +40,7 @@ const PartnerSection: React.FC = () => {
         `${API_URL}/api/partner/create-partner`,
         {
           carName,
-          plaqueNumber: Number(plaqueNumber),
+          plaqueNumber:String(plaqueNumber),
           tel,
           city,
           amount: 7000,
