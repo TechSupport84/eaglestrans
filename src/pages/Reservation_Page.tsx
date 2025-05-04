@@ -39,6 +39,8 @@ export interface Reservation {
   duration: number;
   price: number;
   status: string;
+  orderDate:string,
+  orderHour:string,
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -49,6 +51,8 @@ const ReservationPage: React.FC = () => {
   const [drop, setDrop] = useState("");
   const [pickupSuggestions, setPickupSuggestions] = useState<string[]>([]);
   const [dropSuggestions, setDropSuggestions] = useState<string[]>([]);
+  const [orderDate, setOrderDate] = useState<string |number>("")
+  const [orderHour, setOrderHour] = useState<string>("")
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const { user, token } = useAuth();
   const [loading, setLoading] = useState<boolean>(false)
@@ -127,12 +131,15 @@ const ReservationPage: React.FC = () => {
     try {
       await axios.post(
         `${API_URL}/api/order/create`,
-        { pickupLocation: pickup, dropLocation: drop },
+        { pickupLocation: pickup, dropLocation: drop ,orderDate, orderHour},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Réservation effectuée !");
       setPickup("");
       setDrop("");
+      setOrderHour(" ")
+      setOrderDate(" ")
+      
       loadReservation();
       setLoading(false)
     } catch {
@@ -202,6 +209,12 @@ const ReservationPage: React.FC = () => {
               <p className="flex items-center gap-2 mt-2">
                 <FaRoute className="text-purple-500" />
                 <strong>Destination :</strong> {reservation.dropLocation}
+              </p>
+              <p>
+                <span>Heure : <span className="text-blue-600">{reservation.orderHour} Heure/Min </span></span>
+              </p>
+              <p>
+                <span>Date du  depart: <span className="text-blue-600">{new Date(reservation.orderDate).toDateString()}</span> </span>
               </p>
             </div>
             <div>
@@ -287,6 +300,25 @@ const ReservationPage: React.FC = () => {
                 ))}
               </ul>
             )}
+
+           <label className="block text-sm font-medium text-gray-700 mb-1">Heure: </label>
+            <input
+              type="time"
+              value={orderHour}
+              onChange={(e) => setOrderHour(e.target.value)}
+              placeholder="Entrez votre destination"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
+              required
+            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">La Date</label>
+            <input
+              type="date"
+              value={orderDate}
+              onChange={(e) => setOrderDate(e.target.value)}
+              placeholder="Entrez votre destination"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
+              required
+            />
           </div>
           <button
             type="submit"
