@@ -34,7 +34,7 @@ function AppRoute() {
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Authenticated Routes */}
-        {user ? (
+        {user && (
           <>
             <Route path="/" element={<Reservation_Page />} />
             <Route path="/home" element={<Home_Page />} />
@@ -45,8 +45,6 @@ function AppRoute() {
             <Route path="/confirmed" element={<ConfirmedPartner />} />
             <Route path="/success" element={<SuccessPage />} />
           </>
-        ) : (
-          <Route path="*" element={<NotFound />} />
         )}
 
         {/* Admin Route */}

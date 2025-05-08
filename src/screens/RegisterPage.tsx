@@ -4,21 +4,18 @@ import { useAuth } from "../hooks/useAuth";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-
-
-
-
 function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const[tel, setTel] = useState<string>("")
+  const [tel, setTel] = useState<string>("");
   const [localError, setLocalError] = useState("");
 
-  const { register} = useAuth();
-  const nativate = useNavigate()
-  const handleSubmit = (e: React.FormEvent) => {
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError("");
 
@@ -27,61 +24,62 @@ function RegisterPage() {
       return;
     }
 
-    register(username, email, password, tel);
-    setUsername("")
-    setEmail("")
-    setTel("")
-    setPassword(" ")
-    nativate("/login")
-    toast.success("Inscription réussie ! Veuillez vous connecter.");
+    try {
+      await register(username, email, password, tel);
+      setUsername("");
+      setEmail("");
+      setTel("");
+      setPassword("");
+      toast.success("Inscription réussie ! Veuillez vous connecter.");
+      navigate("/login");
+    } catch (error) {
+      setLocalError("Une erreur est survenue lors de l'inscription.");
+      console.error(error);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-        <h2 className="text-3xl font-semibold mb-6 text-center text-gray-800">Créez votre compte</h2>
-        {(localError) && (
-          <p className="text-red-500 text-sm mb-4">{ localError}</p>
-        )}
+        <h2 className="text-3xl font-semibold mb-6 text-center text-gray-800">
+          Créez votre compte
+        </h2>
+        {localError && <p className="text-red-500 text-sm mb-4">{localError}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="flex gap-4">
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Nom d'utilisateur</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-                placeholder="Entrez votre nom d'utilisateur"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Nom d'utilisateur
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
+              placeholder="Entrez votre nom d'utilisateur"
+            />
           </div>
 
-          <div className="flex gap-4">
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-                placeholder="Entrez votre e-mail"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">E-mail</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
+              placeholder="Entrez votre e-mail"
+            />
           </div>
 
-          <div className="flex gap-4">
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Tel</label>
-              <input
-                type="tel"
-                value={tel}
-                onChange={(e) => setTel(e.target.value)}
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-                placeholder="Entrez votre pays"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tel</label>
+            <input
+              type="tel"
+              value={tel}
+              onChange={(e) => setTel(e.target.value)}
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
+              placeholder="Entrez votre numéro de téléphone"
+            />
           </div>
 
           <div>
@@ -119,7 +117,7 @@ function RegisterPage() {
           </a>
         </div>
       </div>
-      <ToastContainer/>
+      <ToastContainer />
     </div>
   );
 }
