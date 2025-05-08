@@ -1,4 +1,4 @@
-import  {
+import {
   createContext,
   useState,
   useContext,
@@ -75,46 +75,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     fetchUser(); // Run the fetchUser function
   }, []);
 
-// Login function
-const login = async (email: string, password: string) => {
-  setLoading(true);
-  setError("");
+  // Login function
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    setError("");
 
-  try {
-    const response = await axios.post(
-      `${API_URL}/api/auth/login`,
-      { email, password },
-      { withCredentials: true }
-    );
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/auth/login`,
+        { email, password },
+        { withCredentials: true }
+      );
 
-    // Assuming the API returns a token upon login
-    const token = response.data.token;
-    localStorage.setItem('token', token); // Save token to localStorage
+      // Assuming the API returns a token upon login
+      const token = response.data.token;
+      localStorage.setItem('token', token); // Save token to localStorage
 
-    // Add token to Axios header for future requests
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Add token to Axios header for future requests
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-    const userResponse = await axios.get(`${API_URL}/api/auth/me`);
-    setUser(userResponse.data.user);
-  } catch (error: any) {
-    console.error('Login error:', error);
+      const userResponse = await axios.get(`${API_URL}/api/auth/me`);
+      setUser(userResponse.data.user);
+    } catch (error: any) {
+      console.error('Login error:', error);
 
-    // Handle specific error response
-    if (error.response && error.response.status === 401) {
-      // This status might indicate incorrect credentials
-      setError("Invalid email or password. Please try again.");
-    } else if (error.response?.data?.message) {
-      // If there's a specific error message from the backend
-      setError(error.response.data.message || 'Login failed. Please try again.');
-    } else {
-      // Default error message for network issues or other errors
-      setError('Login failed. Please check your network connection and try again.');
+      // Handle specific error response
+      if (error.response && error.response.status === 401) {
+        // This status might indicate incorrect credentials
+        setError("Invalid email or password. Please try again.");
+      } else if (error.response?.data?.message) {
+        // If there's a specific error message from the backend
+        setError(error.response.data.message || 'Login failed. Please try again.');
+      } else {
+        // Default error message for network issues or other errors
+        setError('Login failed. Please check your network connection and try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   // Register function
   const register = async (
@@ -152,7 +151,7 @@ const login = async (email: string, password: string) => {
     } finally {
       setUser(null);
       localStorage.removeItem('token'); 
-      delete axios.defaults.headers.common['Authorization']; 
+      delete axios.defaults.headers.common['Authorization']; // Remove token from headers
     }
   };
 
