@@ -2,12 +2,6 @@ import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-interface User {
-  username: string;
-  email: string;
-  picture?: string;
-}
-
 export default function Home_Page() {
   const { user, logout } = useAuth() 
   const navigate = useNavigate();
