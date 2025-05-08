@@ -60,6 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          withCredentials: true,
         });
         setUser(response.data.user);
       } catch (error) {
@@ -96,6 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        withCredentials: true,
       });
 
       setUser(userResponse.data.user);
@@ -121,13 +123,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ) => {
     setError('');
     try {
-      await axios.post(`${API_URL}/api/auth/register`, {
-        username,
-        email,
-        city,
-        country,
-        password,
-      });
+      await axios.post(
+        `${API_URL}/api/auth/register`,
+        {
+          username,
+          email,
+          city,
+          country,
+          password,
+        },
+        { withCredentials: true }
+      );
     } catch (error: any) {
       console.error('Registration error:', error);
       if (error.response) {
@@ -141,7 +147,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      await axios.post(`${API_URL}/api/auth/logout`);
+      await axios.post(
+        `${API_URL}/api/auth/logout`,
+        {},
+        { withCredentials: true }
+      );
     } catch (err) {
       console.error('Logout failed:', err);
     } finally {
