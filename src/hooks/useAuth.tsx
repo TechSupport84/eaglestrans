@@ -47,9 +47,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string>('');
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
 
-  // Set Axios to send cookies with requests
-  axios.defaults.withCredentials = true;
-
   // Fetch current user on mount if token exists
   useEffect(() => {
     const fetchUser = async () => {
@@ -58,23 +55,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      // Add token to Authorization header if it exists
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
       try {
-        const response = await axios.get(`${API_URL}/api/auth/me`);
+        const response = await axios.get(`${API_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         setUser(response.data.user);
       } catch (error) {
         console.error('Error fetching current user:', error);
         setUser(null);
-        localStorage.removeItem('token'); // Clear token if user fetch fails
-        setToken(null); // Remove token from state
+        localStorage.removeItem('token');
+        setToken(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser(); // Run the fetchUser function
+    fetchUser();
   }, [token]);
 
   // Login function
@@ -89,25 +87,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         { withCredentials: true }
       );
 
-      // Assuming the API returns a token upon login
       const token = response.data.token;
-      localStorage.setItem('token', token); // Save token to localStorage
-      setToken(token); // Update token in state
+      localStorage.setItem('token', token);
+      setToken(token);
 
-      // Add token to Axios header for future requests
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Fetch user using new token
+      const userResponse = await axios.get(`${API_URL}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const userResponse = await axios.get(`${API_URL}/api/auth/me`);
       setUser(userResponse.data.user);
     } catch (error: any) {
       console.error('Login error:', error);
-
-      if (error.response && error.response.status === 401) {
+      if (error.response?.status === 401) {
         setError('Invalid email or password. Please try again.');
-      } else if (error.response?.data?.message) {
-        setError(error.response.data.message || 'Login failed. Please try again.');
       } else {
-        setError('Login failed. Please check your network connection and try again.');
+        setError(error.response?.data?.message || 'Login failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -150,8 +147,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setUser(null);
       setToken(null);
-      localStorage.removeItem('token'); // Remove token from localStorage
-      delete axios.defaults.headers.common['Authorization']; // Remove token from headers
+      localStorage.removeItem('token');
     }
   };
 
@@ -164,7 +160,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         register,
         logout,
-        token, // Export the token state
+        token,
       }}
     >
       {children}
