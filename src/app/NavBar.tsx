@@ -100,7 +100,7 @@ function NavBar() {
           </li>
           <li>
             <a href="/home" className="flex items-center text-white hover:text-blue-300 transition duration-300">
-              <FaClipboardCheck className="mr-2" />
+              <FaUser className="mr-2" />
               Profile
             </a>
           </li>
