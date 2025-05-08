@@ -1,190 +1,146 @@
-import {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from 'react';
-import axios from 'axios';
-import { API_URL } from '../constants/API_URL';
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import axios from "axios";
+import { API_URL } from "../constants/API_URL";
 
 interface User {
   id: string;
   username: string;
   email: string;
-  city: string;
-  country: string;
-  role: string;
+  profileUrl?: string;
+  address?: string;
+  tel?: string;
+  role?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  error: string;
-  login: (email: string, password: string) => Promise<void>;
-  register: (
-    username: string,
-    email: string,
-    city: string,
-    country: string,
-    password: string
-  ) => Promise<void>;
-  logout: () => Promise<void>;
   token: string | null;
+  login: (email: string, password: string) => Promise<string | undefined>;
+  register: (username: string, email: string,tel:string, password: string) => Promise<string | undefined>;
+  logout: () => Promise<void>;
+  updateProfile: (data: FormData) => Promise<string | undefined>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  fetchUser: () => Promise<void>;
 }
 
-// Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth Provider
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  return context;
+};
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(null);
 
-  // Fetch current user on mount if token exists
+  axios.defaults.withCredentials = true;
+
+  // Automatically attach token to all requests if present
   useEffect(() => {
-    const fetchUser = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+    // Load token from localStorage if available
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+    }
+  }, []);
 
-      try {
-        const response = await axios.get(`${API_URL}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        });
-        setUser(response.data.user);
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-        setUser(null);
-        localStorage.removeItem('token');
-        setToken(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      localStorage.setItem("token", token); // Persist token to localStorage
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
+      localStorage.removeItem("token"); // Remove token from localStorage if not set
+    }
   }, [token]);
 
-  // Login function
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError('');
-
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/login`,
-        { email, password },
-        { withCredentials: true }
-      );
-
-      const token = response.data.token;
-      localStorage.setItem('token', token);
-      setToken(token);
-
-      // Fetch user using new token
-      const userResponse = await axios.get(`${API_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-
-      setUser(userResponse.data.user);
-    } catch (error: any) {
-      console.error('Login error:', error);
-      if (error.response?.status === 401) {
-        setError('Invalid email or password. Please try again.');
-      } else {
-        setError(error.response?.data?.message || 'Login failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
+      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+      setToken(res.data.token); // Set the token state
+      setUser(res.data.user); // Set the user state
+      return res.data.message;
+    } catch (err) {
+      console.error("Login error:", err);
+      return "Login failed. Please check your credentials.";
     }
   };
 
-  // Register function
-  const register = async (
-    username: string,
-    email: string,
-    city: string,
-    country: string,
-    password: string
-  ) => {
-    setError('');
+  const register = async (username: string, email: string, tel:string, password: string) => {
     try {
-      await axios.post(
-        `${API_URL}/api/auth/register`,
-        {
-          username,
-          email,
-          city,
-          country,
-          password,
-        },
-        { withCredentials: true }
-      );
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      if (error.response) {
-        setError(error.response.data.message || 'An error occurred during registration.');
-      } else {
-        setError('Network error. Please try again later.');
-      }
+      const res = await axios.post(`${API_URL}/api/auth/register`, { username, email,tel, password });
+      setToken(res.data.token); // Set the token state
+      setUser(res.data.user); // Set the user state
+      return res.data.message;
+    } catch (err) {
+      console.error("Registration error:", err);
+      return "Registration failed. Please try again.";
     }
   };
 
-  // Logout function
   const logout = async () => {
     try {
-      await axios.post(
-        `${API_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true }
-      );
-    } catch (err) {
-      console.error('Logout failed:', err);
-    } finally {
+      await axios.post(`${API_URL}/api/auth/logout`);
       setUser(null);
       setToken(null);
-      localStorage.removeItem('token');
+      localStorage.removeItem("token"); // Clear token from localStorage on logout
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
+
+  const updateProfile = async (formData: FormData) => {
+    try {
+      const res = await axios.put(`${API_URL}/api/auth/update`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setUser(res.data.user);
+      return res.data.message;
+    } catch (err) {
+      console.error("Update Profile error:", err);
+      return "Failed to update profile. Please try again.";
+    }
+  };
+
+  const updatePassword = async (currentPassword: string, newPassword: string) => {
+    try {
+      await axios.put(`${API_URL}/api/auth/update-password`, { currentPassword, newPassword });
+    } catch (err) {
+      console.error("Update Password error:", err);
+    }
+  };
+
+  const fetchUser = async () => {
+    try {
+      if (!token) return; // Skip if no token exists
+      const res = await axios.get(`${API_URL}/api/auth/me`);
+      setUser(res.data.user);
+    } catch (err) {
+      console.error("Fetch user error:", err);
+      setUser(null); // Optionally log out the user if fetching user fails
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, [token]); // Fetch user whenever token changes
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        loading,
-        error,
+        token,
         login,
         register,
         logout,
-        token,
+        updateProfile,
+        updatePassword,
+        fetchUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
-
-// Hook for consuming AuthContext
-const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export default useAuth;

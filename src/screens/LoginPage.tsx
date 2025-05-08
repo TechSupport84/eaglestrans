@@ -1,6 +1,6 @@
 // components/LoginPage.tsx
 import React, { useState } from "react";
-import useAuth from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | undefined>("");
   const navigate = useNavigate();
-  const { login, error } = useAuth();
+  const { login} = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +57,8 @@ function LoginPage() {
         <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
           Connexion
         </h2>
-        {(error || localError) && (
-          <p className="text-red-500 text-sm mb-4">{error || localError}</p>
+        {( localError) && (
+          <p className="text-red-500 text-sm mb-4">{ localError}</p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

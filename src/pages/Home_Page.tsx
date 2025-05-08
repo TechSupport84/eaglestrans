@@ -1,4 +1,4 @@
-import useAuth from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -9,14 +9,14 @@ interface User {
 }
 
 export default function Home_Page() {
-  const { user, loading, logout } = useAuth() as { user: User | null; loading: boolean; logout: () => void };
+  const { user, logout } = useAuth() 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!user) {
       navigate("/home"); // Redirect to the home page if no user is logged in
     }
-  }, [user, loading, navigate]);
+  }, [user, navigate]);
 
   const handleNavigation = () => {
     navigate("/reservation");
@@ -39,13 +39,7 @@ export default function Home_Page() {
     navigate("/login"); // Redirect to the login page after logout
   };
 
-  if (loading) {
-    return (
-      <p className="text-center mt-10 text-lg font-semibold animate-pulse">
-        Chargement en cours...
-      </p>
-    );
-  }
+
 
   return user ? (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 py-8">
@@ -65,7 +59,7 @@ export default function Home_Page() {
         </div>
         <div className="flex flex-col items-center space-y-4">
           <img
-            src={user.picture ? user.picture : "./user.png"}
+            src={user.profileUrl ? user.profileUrl : "./user.png"}
             alt="Profile"
             className="w-20 h-20 rounded-full border-2 border-gray-300 shadow-sm"
           />

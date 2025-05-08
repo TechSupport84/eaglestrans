@@ -1,34 +1,36 @@
 // components/RegisterPage.tsx
 import React, { useState } from "react";
-import useAuth from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+
+
+
+
 
 function RegisterPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [city, setCity] = useState("Nairobi");
-  const [country, setCountry] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const[tel, setTel] = useState<string>("")
   const [localError, setLocalError] = useState("");
 
-  const { register, error } = useAuth();
+  const { register} = useAuth();
   const nativate = useNavigate()
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError("");
 
-    if (!username || !email || !city || !country || !password) {
+    if (!username || !email || !tel || !password) {
       setLocalError("Tous les champs sont requis");
       return;
     }
 
-    register(username, email, city, country, password);
+    register(username, email, password, tel);
     setUsername("")
     setEmail("")
-    setCity("")
-    setCountry("")
+    setTel("")
     setPassword(" ")
     nativate("/login")
     toast.success("Inscription réussie ! Veuillez vous connecter.");
@@ -38,8 +40,8 @@ function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
         <h2 className="text-3xl font-semibold mb-6 text-center text-gray-800">Créez votre compte</h2>
-        {(error || localError) && (
-          <p className="text-red-500 text-sm mb-4">{error || localError}</p>
+        {(localError) && (
+          <p className="text-red-500 text-sm mb-4">{ localError}</p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -71,24 +73,11 @@ function RegisterPage() {
 
           <div className="flex gap-4">
             <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Ville</label>
+              <label className="block text-sm font-medium text-gray-700">Tel</label>
               <input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-                placeholder="Entrez votre ville"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Pays</label>
-              <input
-                type="text"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
+                type="tel"
+                value={tel}
+                onChange={(e) => setTel(e.target.value)}
                 className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
                 placeholder="Entrez votre pays"
               />

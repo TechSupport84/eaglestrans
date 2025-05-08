@@ -8,7 +8,7 @@ import {
   FaMoneyBillWave,
 } from 'react-icons/fa';
 import { API_URL } from '../constants/API_URL';
-import useAuth from '../hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 interface Partners {
   partnerID: string;

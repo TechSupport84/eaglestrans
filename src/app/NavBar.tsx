@@ -1,6 +1,6 @@
 import { useState } from "react"; 
 import { FaHome, FaServicestack, FaClipboardCheck, FaHandshake, FaInfoCircle, FaUser } from 'react-icons/fa';
-import useAuth from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import { BiSolidDashboard } from "react-icons/bi";
 function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

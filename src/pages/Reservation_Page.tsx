@@ -9,7 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import useAuth from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 import { API_URL } from "../constants/API_URL";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -54,11 +54,13 @@ const ReservationPage: React.FC = () => {
   const [orderDate, setOrderDate] = useState<string |number>("")
   const [orderHour, setOrderHour] = useState<string>("")
   const [reservation, setReservation] = useState<Reservation | null>(null);
-  const { user} = useAuth();
+  const { user, token} = useAuth();
   const [loading, setLoading] = useState<boolean>(false)
   const pickupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+
+  console.log("user", user?.id)
   const fetchSuggestions = async (
     query: string,
     setter: React.Dispatch<React.SetStateAction<string[]>>
@@ -109,12 +111,17 @@ const ReservationPage: React.FC = () => {
   };
 
   const loadReservation = async () => {
-    if (!user?.id ) return;
+    if (!user?.id) return console.log("Error")
     try {
       const { data } = await axios.get<Reservation>(
         `${API_URL}/api/order/user/${user.id}`,
-        { withCredentials:true}
+        { 
+          headers:{
+            Authorization:`Bearer ${token}`
+          }
+        }
       );
+      console.log("Orders",data)
       setReservation(data);
     } catch {
       setReservation(null);
@@ -132,7 +139,11 @@ const ReservationPage: React.FC = () => {
       await axios.post(
         `${API_URL}/api/order/create`,
         { pickupLocation: pickup, dropLocation: drop ,orderDate, orderHour},
-        { withCredentials:true}
+         {
+          headers:{
+            Authorization: `Bearer ${token}`
+          }
+         }
       );
       toast.success("Réservation effectuée !");
       setPickup("");
@@ -154,7 +165,11 @@ const ReservationPage: React.FC = () => {
       const { data } = await axios.put(
         `${API_URL}/api/order/${reservation._id}/accept`,
         {},
-        { withCredentials:true}
+        {
+          headers:{
+            Authorization: `Bearer ${token}`
+          }
+         }
       );
       toast.success("Commande acceptée !");
       setReservation(data.order);
@@ -169,7 +184,11 @@ const ReservationPage: React.FC = () => {
       const { data } = await axios.put(
         `${API_URL}/api/order/${reservation._id}/complete`,
         {},
-        { withCredentials:true}
+        {
+          headers:{
+            Authorization: `Bearer ${token}`
+          }
+         }
       );
       toast.success("Commande terminée !");
       setReservation(data.order);
