@@ -1,5 +1,5 @@
 import { useState } from "react"; 
-import { FaHome, FaServicestack, FaClipboardCheck, FaHandshake, FaInfoCircle } from 'react-icons/fa';
+import { FaHome, FaServicestack, FaClipboardCheck, FaHandshake, FaInfoCircle, FaUser } from 'react-icons/fa';
 import useAuth from "../hooks/useAuth";
 import { BiSolidDashboard } from "react-icons/bi";
 function NavBar() {
@@ -17,10 +17,11 @@ function NavBar() {
 
         {/* Navbar Links (Desktop View) */}
         <ul className={`hidden md:flex space-x-6 text-white`}>
+
           <li>
             <a href="/" className="flex items-center text-white hover:text-blue-300 transition duration-300">
-              <FaHome className="mr-2" />
-              Acceuil
+              <FaClipboardCheck className="mr-2" />
+              Reservation en Ligne
             </a>
           </li>
           <li>
@@ -29,18 +30,21 @@ function NavBar() {
               Nos Services
             </a>
           </li>
-          <li>
-            <a href="/reservation" className="flex items-center text-white hover:text-blue-300 transition duration-300">
-              <FaClipboardCheck className="mr-2" />
-              Reservation en Ligne
-            </a>
-          </li>
+
           <li>
             <a href="/partner" className="flex items-center text-white hover:text-blue-300 transition duration-300">
               <FaHandshake className="mr-2" />
               Devenir Partenaire
             </a>
           </li>
+           <li>
+          <a href="/home" className="flex items-center text-white hover:text-blue-300 transition duration-300">
+              <FaUser className="mr-2" />
+              Profile
+            </a>
+          </li>
+
+
           <li>
             <a href="/appropos" className="flex items-center text-white hover:text-blue-300 transition duration-300">
               <FaInfoCircle className="mr-2" />
@@ -85,7 +89,7 @@ function NavBar() {
           <li>
             <a href="/" className="flex items-center text-white hover:text-blue-300 transition duration-300">
               <FaHome className="mr-2" />
-              Acceuil
+              Reservation en Ligne
             </a>
           </li>
           <li>
@@ -95,9 +99,9 @@ function NavBar() {
             </a>
           </li>
           <li>
-            <a href="/reservation" className="flex items-center text-white hover:text-blue-300 transition duration-300">
+            <a href="/home" className="flex items-center text-white hover:text-blue-300 transition duration-300">
               <FaClipboardCheck className="mr-2" />
-              Reservation en Ligne
+              Profile
             </a>
           </li>
           <li>

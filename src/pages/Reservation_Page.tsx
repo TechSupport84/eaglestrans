@@ -54,7 +54,7 @@ const ReservationPage: React.FC = () => {
   const [orderDate, setOrderDate] = useState<string |number>("")
   const [orderHour, setOrderHour] = useState<string>("")
   const [reservation, setReservation] = useState<Reservation | null>(null);
-  const { user, token } = useAuth();
+  const { user} = useAuth();
   const [loading, setLoading] = useState<boolean>(false)
   const pickupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,11 +109,11 @@ const ReservationPage: React.FC = () => {
   };
 
   const loadReservation = async () => {
-    if (!user?.id || !token) return;
+    if (!user?.id ) return;
     try {
       const { data } = await axios.get<Reservation>(
         `${API_URL}/api/order/user/${user.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${user}` } }
       );
       setReservation(data);
     } catch {
@@ -123,7 +123,7 @@ const ReservationPage: React.FC = () => {
 
   useEffect(() => {
     loadReservation();
-  }, [user, token]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +132,7 @@ const ReservationPage: React.FC = () => {
       await axios.post(
         `${API_URL}/api/order/create`,
         { pickupLocation: pickup, dropLocation: drop ,orderDate, orderHour},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${user}` } }
       );
       toast.success("Réservation effectuée !");
       setPickup("");
@@ -154,7 +154,7 @@ const ReservationPage: React.FC = () => {
       const { data } = await axios.put(
         `${API_URL}/api/order/${reservation._id}/accept`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${user}` } }
       );
       toast.success("Commande acceptée !");
       setReservation(data.order);
@@ -169,7 +169,7 @@ const ReservationPage: React.FC = () => {
       const { data } = await axios.put(
         `${API_URL}/api/order/${reservation._id}/complete`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${user}` } }
       );
       toast.success("Commande terminée !");
       setReservation(data.order);

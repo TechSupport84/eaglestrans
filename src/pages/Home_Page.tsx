@@ -14,7 +14,7 @@ export default function Home_Page() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/home");
+      navigate("/home"); // Redirect to the home page if no user is logged in
     }
   }, [user, loading, navigate]);
 
@@ -32,6 +32,11 @@ export default function Home_Page() {
 
   const handleEmail = () => {
     window.location.href = "mailto:eaglesvisionms@gmail.com";
+  };
+
+  const handleLogout = () => {
+    logout(); // Call logout function from the auth hook
+    navigate("/login"); // Redirect to the login page after logout
   };
 
   if (loading) {
@@ -64,9 +69,9 @@ export default function Home_Page() {
             alt="Profile"
             className="w-20 h-20 rounded-full border-2 border-gray-300 shadow-sm"
           />
-            <p className="text-gray-600"> {user.email}</p>
+          <p className="text-gray-600"> {user.email}</p>
           <button
-            onClick={logout}
+            onClick={handleLogout} // Handle logout on button click
             className="px-5 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
           >
             Déconnexion
