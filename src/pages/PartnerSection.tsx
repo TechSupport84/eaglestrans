@@ -19,7 +19,8 @@ const PartnerSection: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false)
 
   const navigate = useNavigate();
-  const {  user } = useAuth();
+  const {  user} = useAuth();
+  
 
   const handleCreatePartner = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

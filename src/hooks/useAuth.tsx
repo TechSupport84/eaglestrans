@@ -30,6 +30,7 @@ interface AuthContextType {
     password: string
   ) => Promise<void>;
   logout: () => Promise<void>;
+  token: string | null;
 }
 
 // Create context
@@ -43,15 +44,15 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
 
   // Set Axios to send cookies with requests
   axios.defaults.withCredentials = true;
 
-  // Fetch current user on mount
+  // Fetch current user on mount if token exists
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem('token');
       if (!token) {
         setLoading(false);
         return;
@@ -67,18 +68,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Error fetching current user:', error);
         setUser(null);
         localStorage.removeItem('token'); // Clear token if user fetch fails
+        setToken(null); // Remove token from state
       } finally {
         setLoading(false);
       }
     };
 
     fetchUser(); // Run the fetchUser function
-  }, []);
+  }, [token]);
 
   // Login function
   const login = async (email: string, password: string) => {
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       const response = await axios.post(
@@ -90,6 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Assuming the API returns a token upon login
       const token = response.data.token;
       localStorage.setItem('token', token); // Save token to localStorage
+      setToken(token); // Update token in state
 
       // Add token to Axios header for future requests
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -99,15 +102,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error: any) {
       console.error('Login error:', error);
 
-      // Handle specific error response
       if (error.response && error.response.status === 401) {
-        // This status might indicate incorrect credentials
-        setError("Invalid email or password. Please try again.");
+        setError('Invalid email or password. Please try again.');
       } else if (error.response?.data?.message) {
-        // If there's a specific error message from the backend
         setError(error.response.data.message || 'Login failed. Please try again.');
       } else {
-        // Default error message for network issues or other errors
         setError('Login failed. Please check your network connection and try again.');
       }
     } finally {
@@ -123,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     country: string,
     password: string
   ) => {
-    setError("");
+    setError('');
     try {
       await axios.post(`${API_URL}/api/auth/register`, {
         username,
@@ -147,10 +146,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await axios.post(`${API_URL}/api/auth/logout`);
     } catch (err) {
-      console.error("Logout failed:", err);
+      console.error('Logout failed:', err);
     } finally {
       setUser(null);
-      localStorage.removeItem('token'); 
+      setToken(null);
+      localStorage.removeItem('token'); // Remove token from localStorage
       delete axios.defaults.headers.common['Authorization']; // Remove token from headers
     }
   };
@@ -164,6 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         login,
         register,
         logout,
+        token, // Export the token state
       }}
     >
       {children}

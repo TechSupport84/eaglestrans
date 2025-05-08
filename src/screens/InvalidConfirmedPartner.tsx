@@ -29,7 +29,7 @@ const InvalidConfirmedPartner: React.FC = () => {
   const [partnerId, setPartnerId] = useState<string | number>("");
   const [tokenMoney, setTokenMoney] = useState<string | number>("");
   const [amount, setAmount] = useState<number>(8000);
-  const { user } = useAuth();
+  const {token} = useAuth();
 
   // Function to confirm a partner
   const handleConfirmPartner = async (e: React.FormEvent) => {
@@ -45,7 +45,7 @@ const InvalidConfirmedPartner: React.FC = () => {
         { partnerId, tokenMoney, amount },
         {
           headers: {
-            Authorization: `Bearer ${user}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -84,7 +84,7 @@ const InvalidConfirmedPartner: React.FC = () => {
       try {
         const response = await axios.get(`${API_URL}/api/partner/unconfirmed-partner`, {
           headers: {
-            Authorization: `Bearer ${user}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         console.log(response.data.partners);
@@ -94,7 +94,7 @@ const InvalidConfirmedPartner: React.FC = () => {
       }
     };
     toConfirm();
-  }, [user, toConfirmPartners]);
+  }, [token, toConfirmPartners]);
 
   return (
     <main className="p-6">
