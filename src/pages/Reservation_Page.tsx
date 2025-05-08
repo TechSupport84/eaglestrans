@@ -113,7 +113,7 @@ const ReservationPage: React.FC = () => {
     try {
       const { data } = await axios.get<Reservation>(
         `${API_URL}/api/order/user/${user.id}`,
-        { headers: { Authorization: `Bearer ${user}` } }
+        { withCredentials:true}
       );
       setReservation(data);
     } catch {
@@ -132,7 +132,7 @@ const ReservationPage: React.FC = () => {
       await axios.post(
         `${API_URL}/api/order/create`,
         { pickupLocation: pickup, dropLocation: drop ,orderDate, orderHour},
-        { headers: { Authorization: `Bearer ${user}` } }
+        { withCredentials:true}
       );
       toast.success("Réservation effectuée !");
       setPickup("");
@@ -154,7 +154,7 @@ const ReservationPage: React.FC = () => {
       const { data } = await axios.put(
         `${API_URL}/api/order/${reservation._id}/accept`,
         {},
-        { headers: { Authorization: `Bearer ${user}` } }
+        { withCredentials:true}
       );
       toast.success("Commande acceptée !");
       setReservation(data.order);
@@ -169,7 +169,7 @@ const ReservationPage: React.FC = () => {
       const { data } = await axios.put(
         `${API_URL}/api/order/${reservation._id}/complete`,
         {},
-        { headers: { Authorization: `Bearer ${user}` } }
+        { withCredentials:true}
       );
       toast.success("Commande terminée !");
       setReservation(data.order);

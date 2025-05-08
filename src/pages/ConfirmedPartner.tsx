@@ -32,9 +32,7 @@ const handleCopy = () => {
     const getCurrentPartner = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/partner/current-partner`, {
-          headers: {
-            Authorization: `Bearer ${user}`,
-          },
+       withCredentials:true,
         });
 
         const partnerData: Partners = response.data.currenctParners;

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import useAuth from "../hooks/useAuth";
 import axios from "axios";
 import { API_URL } from "../constants/API_URL";
 import { toast, ToastContainer } from "react-toastify";
@@ -29,7 +28,7 @@ const InvalidConfirmedPartner: React.FC = () => {
   const [partnerId, setPartnerId] = useState<string | number>("");
   const [tokenMoney, setTokenMoney] = useState<string | number>("");
   const [amount, setAmount] = useState<number>(8000);
-  const {token} = useAuth();
+
 
   // Function to confirm a partner
   const handleConfirmPartner = async (e: React.FormEvent) => {
@@ -44,10 +43,7 @@ const InvalidConfirmedPartner: React.FC = () => {
         `${API_URL}/api/partner/confirm`,
         { partnerId, tokenMoney, amount },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+           withCredentials:true
         }
       );
 
@@ -83,9 +79,7 @@ const InvalidConfirmedPartner: React.FC = () => {
     const toConfirm = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/partner/unconfirmed-partner`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials:true
         });
         console.log(response.data.partners);
         setToConfirmPartner(response.data.partners);
@@ -94,7 +88,7 @@ const InvalidConfirmedPartner: React.FC = () => {
       }
     };
     toConfirm();
-  }, [token, toConfirmPartners]);
+  }, [ toConfirmPartners]);
 
   return (
     <main className="p-6">

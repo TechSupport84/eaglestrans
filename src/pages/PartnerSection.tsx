@@ -4,7 +4,6 @@ import { Car, Phone, MapPin, CreditCard, BadgeDollarSign, CheckCircle } from "lu
 import axios from "axios";
 import { API_URL } from "../constants/API_URL";
 import { toast, ToastContainer } from "react-toastify";
-import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const PartnerSection: React.FC = () => {
@@ -19,8 +18,8 @@ const PartnerSection: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false)
 
   const navigate = useNavigate();
-  const {  user} = useAuth();
-  
+
+
 
   const handleCreatePartner = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,9 +47,7 @@ const PartnerSection: React.FC = () => {
           amount: 8000,
         },
         {
-          headers: {
-            Authorization: `Bearer ${user}`,
-          },
+    withCredentials:true
         }
       );
      

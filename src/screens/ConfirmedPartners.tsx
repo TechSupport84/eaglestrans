@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../constants/API_URL';
 import axios from 'axios';
-import useAuth from '../hooks/useAuth';
+
 
 interface User {
   _id: string;
@@ -23,16 +23,11 @@ interface Partner {
 
 const ConfirmedPartnersPage: React.FC = () => {
   const [confirmedPartners, setConfirmedPartners] = useState<Partner[]>([]);
-  const {user} = useAuth()
   useEffect(() => {
     // Fetch confirmed partners from your API
     const fetchConfirmedPartners = async () => {
       try {
-        const response = await axios(`${API_URL}/api/partner/confirmed`,{
-          headers:{
-            Authorization: `Bearer ${user}`
-          }
-        }); // Replace with your API endpoint
+        const response = await axios(`${API_URL}/api/partner/confirmed`,   { withCredentials:true}); // Replace with your API endpoint
          console.log(response.data.confirmedPartners)
         if (response) {
           setConfirmedPartners(response.data.confirmedPartners);
