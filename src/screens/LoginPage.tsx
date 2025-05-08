@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import useAuth from "../hooks/useAuth";
 import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -33,11 +32,6 @@ function LoginPage() {
       setEmail(""); // Reset email input
       setPassword(""); // Reset password input
 
-      // Optionally, store token in localStorage and set header for future requests
-      const token = localStorage.getItem("token");
-      if (token) {
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      }
 
       // Redirect on successful login
       navigate("/"); // Redirect to homepage or dashboard
