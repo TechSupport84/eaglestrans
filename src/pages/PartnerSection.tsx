@@ -19,7 +19,7 @@ const PartnerSection: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false)
 
   const navigate = useNavigate();
-  const {  token } = useAuth();
+  const {  user } = useAuth();
 
   const handleCreatePartner = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,7 +48,7 @@ const PartnerSection: React.FC = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${user}`,
           },
         }
       );

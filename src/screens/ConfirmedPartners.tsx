@@ -23,14 +23,14 @@ interface Partner {
 
 const ConfirmedPartnersPage: React.FC = () => {
   const [confirmedPartners, setConfirmedPartners] = useState<Partner[]>([]);
-  const {token} = useAuth()
+  const {user} = useAuth()
   useEffect(() => {
     // Fetch confirmed partners from your API
     const fetchConfirmedPartners = async () => {
       try {
         const response = await axios(`${API_URL}/api/partner/confirmed`,{
           headers:{
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${user}`
           }
         }); // Replace with your API endpoint
          console.log(response.data.confirmedPartners)
