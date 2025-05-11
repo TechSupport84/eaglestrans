@@ -4,7 +4,7 @@ import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [tel, setTel] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -12,28 +12,35 @@ function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  // Phone number regex: accepts +243123456789 or 0812345678 format
+  const phoneRegex = /^(\+?\d{9,15}|\d{9,15})$/;
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLocalError(undefined);
 
-    if (!email || !password) {
-      return setLocalError('All fields are required');
+    if (!tel || !password) {
+      return setLocalError("Tous les champs sont requis.");
+    }
+
+    if (!phoneRegex.test(tel)) {
+      return setLocalError("Numéro de téléphone invalide. Exemple: +243812345678");
     }
 
     try {
       setLoading(true);
-      await login(email, password);
+      await login(tel, password);
       setLoading(false);
-      setEmail("");
+      setTel("");
       setPassword("");
       navigate("/");
     } catch (error) {
       setLoading(false);
       if (error instanceof AxiosError && error.response) {
-        const errMessage = error.response.data?.message || "An unexpected error occurred";
+        const errMessage = error.response.data?.message || "Une erreur inattendue s'est produite.";
         setLocalError(errMessage);
       } else {
-        setLocalError("An unexpected error occurred");
+        setLocalError("Une erreur inattendue s'est produite.");
       }
     }
   };
@@ -50,13 +57,13 @@ function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">E-mail</label>
+            <label className="block text-sm font-medium text-gray-700">Téléphone</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="tel"
+              value={tel}
+              onChange={(e) => setTel(e.target.value)}
               className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-              placeholder="Entrez votre e-mail"
+              placeholder="Ex: +243812345678"
             />
           </div>
 

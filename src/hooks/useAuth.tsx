@@ -22,7 +22,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<string | undefined>;
+  login: (tel: string, password: string) => Promise<string | undefined>;
   register: (
     username: string,
     email: string,
@@ -78,9 +78,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // -------------------- Actions --------------------
 
-  const login = async (email: string, password: string): Promise<string | undefined> => {
+  const login = async (tel: string, password: string): Promise<string | undefined> => {
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
+      const res = await axios.post(`${API_URL}/api/auth/login`, { tel, password });
       const { token, user, message } = res.data;
       setToken(token);
       setUser(user);
