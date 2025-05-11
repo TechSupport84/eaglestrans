@@ -5,9 +5,12 @@ import App from './App.tsx'
 import { AuthProvider } from './hooks/useAuth.tsx'
 
 createRoot(document.getElementById('root')!).render(
-  <AuthProvider>
+
   <StrictMode>
-    <App />
+      <AuthProvider>
+            <App />
+      </AuthProvider>
+
   </StrictMode>,
-  </AuthProvider>
+
 )

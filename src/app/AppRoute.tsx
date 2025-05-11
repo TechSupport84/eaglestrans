@@ -1,7 +1,8 @@
 import {
   BrowserRouter as Router,
   Routes,
-  Route
+  Route,
+  Navigate,
 } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import NavBar from "./NavBar";
@@ -19,22 +20,22 @@ import RegisterPage from "../screens/RegisterPage";
 import Home_Page from "../pages/Home_Page";
 import NotFound from "../components/NotFound";
 
-
-
 function AppRoute() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+
+  const isAuthenticated = user && token;
 
   return (
     <Router>
-      {user && <NavBar />}
+      {isAuthenticated && <NavBar />}
 
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
+        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
 
-        {/* Authenticated Routes */}
-        {user && (
+        {/* Protected Routes */}
+        {isAuthenticated && (
           <>
             <Route path="/" element={<Reservation_Page />} />
             <Route path="/home" element={<Home_Page />} />
@@ -48,13 +49,15 @@ function AppRoute() {
         )}
 
         {/* Admin Route */}
-      {user && user.role === "admin" &&(<Route path="/dashboard" element={<Dashboard />} />)}
+        {isAuthenticated && user.role === "admin" && (
+          <Route path="/dashboard" element={<Dashboard />} />
+        )}
 
-        {/* Catch-all route for 404 Not Found */}
+        {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
 
-      {user && <FooterPage />}
+      {isAuthenticated && <FooterPage />}
     </Router>
   );
 }

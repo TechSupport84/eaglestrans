@@ -25,7 +25,7 @@ interface Partner {
 }
 
 interface User {
-  _id: string;
+  id: string;
   username: string;
   email: string;
 }
@@ -54,11 +54,25 @@ const ReservationPage: React.FC = () => {
   const [orderDate, setOrderDate] = useState<string |number>("")
   const [orderHour, setOrderHour] = useState<string>("")
   const [reservation, setReservation] = useState<Reservation | null>(null);
-  const { user, token} = useAuth();
+  const { user, token, fetchUser} = useAuth();
   const [loading, setLoading] = useState<boolean>(false)
   const pickupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+useEffect(() => {
+  if (!user?.id) {
+    (async () => {
+      await fetchUser();
+    })();
+  }
+}, [user?.id, fetchUser]);
+  useEffect(() => {
+    console.log("user", user); // Debugging
+  }, [user]);
+
+  if (!user) {
+    return <p>Chargement de l'utilisateur...</p>; // Or redirect / show login
+  }
 
   console.log("user", user?.id)
   const fetchSuggestions = async (
@@ -121,6 +135,7 @@ const ReservationPage: React.FC = () => {
           }
         }
       );
+      console.log("Log")
       console.log("Orders",data)
       setReservation(data);
     } catch {
@@ -130,7 +145,7 @@ const ReservationPage: React.FC = () => {
 
   useEffect(() => {
     loadReservation();
-  }, [user]);
+  }, [user, token, reservation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

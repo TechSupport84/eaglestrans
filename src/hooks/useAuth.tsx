@@ -1,7 +1,14 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import axios from "axios";
 import { API_URL } from "../constants/API_URL";
 
+// -------------------- Types --------------------
 interface User {
   id: string;
   username: string;
@@ -16,82 +23,124 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<string | undefined>;
-  register: (username: string, email: string,tel:string, password: string) => Promise<string | undefined>;
+  register: (
+    username: string,
+    email: string,
+    tel: string,
+    password: string
+  ) => Promise<string | undefined>;
   logout: () => Promise<void>;
   updateProfile: (data: FormData) => Promise<string | undefined>;
-  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-  fetchUser: () => Promise<void>;
+  updatePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<string | undefined>;
+  fetchUser: (token?: string) => Promise<void>;  // Allow optional token parameter
 }
 
+// -------------------- Context --------------------
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// -------------------- Hook --------------------
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
   return context;
 };
 
+// -------------------- Provider --------------------
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
+  // Set Axios to use credentials (cookies)
   axios.defaults.withCredentials = true;
 
-  // Automatically attach token to all requests if present
+  // Load token from localStorage on app start
   useEffect(() => {
-    // Load token from localStorage if available
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setToken(storedToken);
+      fetchUser(storedToken); // Pass the token explicitly
     }
   }, []);
 
+  // Persist token to localStorage when updated
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      localStorage.setItem("token", token); // Persist token to localStorage
+      localStorage.setItem("token", token);
     } else {
-      delete axios.defaults.headers.common["Authorization"];
-      localStorage.removeItem("token"); // Remove token from localStorage if not set
+      localStorage.removeItem("token");
     }
   }, [token]);
 
-  const login = async (email: string, password: string) => {
+  // -------------------- Actions --------------------
+
+  const login = async (email: string, password: string): Promise<string | undefined> => {
     try {
       const res = await axios.post(`${API_URL}/api/auth/login`, { email, password });
-      setToken(res.data.token); // Set the token state
-      setUser(res.data.user); // Set the user state
-      return res.data.message;
+      const { token, user, message } = res.data;
+      setToken(token);
+      setUser(user);
+      return message;
     } catch (err) {
       console.error("Login error:", err);
-      return "Login failed. Please check your credentials.";
+      return "Échec de la connexion. Vérifiez vos identifiants.";
     }
   };
 
-  const register = async (username: string, email: string, tel:string, password: string) => {
-    try {
-      const res = await axios.post(`${API_URL}/api/auth/register`, { username, email,tel, password });
-      setToken(res.data.token); // Set the token state
-      setUser(res.data.user); // Set the user state
-      return res.data.message;
-    } catch (err) {
-      console.error("Registration error:", err);
-      return "Registration failed. Please try again.";
-    }
-  };
+ const register = async (
+  username: string,
+  email: string,
+  tel: string,
+  password: string
+): Promise<string | undefined> => {
+  try {
+    const res = await axios.post(`${API_URL}/api/auth/register`, {
+      username,
+      email,
+      tel,
+      password,
+    });
 
-  const logout = async () => {
+    // Assuming the server response contains token, user, and a message
+    const { token, user, message } = res.data;
+    
+    // Set the token and user data in the state if the registration is successful
+    setToken(token);
+    setUser(user);
+    
+    // Return the message from the server
+    return message;
+  } catch (err) {
+    console.error("Registration error:", err);
+    
+    if (axios.isAxiosError(err) && err.response) {
+      // Extract server error message (e.g., "Email already exists")
+      const errorMessage = err.response.data?.message || "Échec de l'inscription.";
+      return errorMessage;
+    }
+
+    // Default error message if the server doesn't provide one
+    return "Échec de l'inscription. Veuillez réessayer.";
+  }
+};
+
+  const logout = async (): Promise<void> => {
     try {
       await axios.post(`${API_URL}/api/auth/logout`);
-      setUser(null);
-      setToken(null);
-      localStorage.removeItem("token"); // Clear token from localStorage on logout
     } catch (err) {
       console.error("Logout error:", err);
+    } finally {
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem("token");
     }
   };
 
-  const updateProfile = async (formData: FormData) => {
+  const updateProfile = async (formData: FormData): Promise<string | undefined> => {
     try {
       const res = await axios.put(`${API_URL}/api/auth/update`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -99,34 +148,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(res.data.user);
       return res.data.message;
     } catch (err) {
-      console.error("Update Profile error:", err);
-      return "Failed to update profile. Please try again.";
+      console.error("Update profile error:", err);
+      return "Échec de la mise à jour du profil.";
     }
   };
 
-  const updatePassword = async (currentPassword: string, newPassword: string) => {
+  const updatePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<string | undefined> => {
     try {
-      await axios.put(`${API_URL}/api/auth/update-password`, { currentPassword, newPassword });
+      await axios.put(`${API_URL}/api/auth/update-password`, {
+        currentPassword,
+        newPassword,
+      });
+      return "Mot de passe mis à jour avec succès.";
     } catch (err) {
-      console.error("Update Password error:", err);
+      console.error("Update password error:", err);
+      return "Échec de la mise à jour du mot de passe.";
     }
   };
 
-  const fetchUser = async () => {
+  // Fetch user based on token
+  const fetchUser = async (token?: string): Promise<void> => {
     try {
-      if (!token) return; // Skip if no token exists
-      const res = await axios.get(`${API_URL}/api/auth/me`);
-      setUser(res.data.user);
+      // Only fetch if token is available
+      if (!token) return;
+      
+      const res = await axios.get(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.data?.user) {
+        setUser(res.data.user);
+      } else {
+        console.warn("No user returned from /me");
+        setUser(null);
+      }
     } catch (err) {
       console.error("Fetch user error:", err);
-      setUser(null); // Optionally log out the user if fetching user fails
+
+      // If unauthorized, clear the user and token
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("token");
+      }
     }
   };
 
-  useEffect(() => {
-    fetchUser();
-  }, [token]); // Fetch user whenever token changes
-
+  // -------------------- Render --------------------
   return (
     <AuthContext.Provider
       value={{
@@ -137,7 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         updateProfile,
         updatePassword,
-        fetchUser,
+        fetchUser, // Ensure this has the correct type
       }}
     >
       {children}

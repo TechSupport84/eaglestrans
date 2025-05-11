@@ -12,7 +12,7 @@ function RegisterPage() {
   const [tel, setTel] = useState<string>("");
   const [localError, setLocalError] = useState("");
 
-  const { register } = useAuth();
+  const { register, } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
