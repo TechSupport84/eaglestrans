@@ -12,6 +12,8 @@ function RegisterPage() {
   const [tel, setTel] = useState<string>("");
   const [localError, setLocalError] = useState("");
 
+
+  const phoneRegex = /^(\+?\d{9,15}|\d{9,15})$/;
   const { register, } = useAuth();
   const navigate = useNavigate();
 
@@ -19,9 +21,13 @@ function RegisterPage() {
     e.preventDefault();
     setLocalError("");
 
-    if (!username || !email || !tel || !password) {
+    if (!username ||!tel || !password) {
       setLocalError("Tous les champs sont requis");
       return;
+    }
+
+     if (!phoneRegex.test(tel)) {
+      return setLocalError("Numéro de téléphone invalide. Exemple: +225812345678");
     }
 
     try {
@@ -67,7 +73,7 @@ function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-              placeholder="Entrez votre e-mail"
+              placeholder="Entrez votre e-mail (Optional)"
             />
           </div>
 

@@ -63,7 +63,7 @@ function LoginPage() {
               value={tel}
               onChange={(e) => setTel(e.target.value)}
               className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ex: +243812345678"
+              placeholder="Ex: +225812345678 ou 07***"
             />
           </div>
 
