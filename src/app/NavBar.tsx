@@ -116,6 +116,15 @@ function NavBar() {
               A Propos
             </a>
           </li>
+          {user?.role ==="admin" &&(
+          <li>
+          <a href="/dashboard" className="flex items-center text-white hover:text-blue-300 transition duration-300">
+            <BiSolidDashboard className="mr-2" />
+          Dashboard
+          </a>
+        </li>
+           )}
+
         </ul>
       </div>
     </header>
