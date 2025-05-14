@@ -31,7 +31,7 @@ const ConfirmedPartnersPage: React.FC = () => {
     // Fetch confirmed partners from your API
     const fetchConfirmedPartners = async () => {
       try {
-        const response = await axios(`${API_URL}/api/partner/confirmed`,   { 
+        const response = await axios.get(`${API_URL}/api/partner/confirmed`,   { 
           headers:{
             Authorization: `Bearer ${token}`
           }

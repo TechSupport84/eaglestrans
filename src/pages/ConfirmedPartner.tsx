@@ -18,9 +18,10 @@ interface Partners {
 const ConfirmedPartner: React.FC = () => {
   const [currentPartner, setCurrentPartner] = useState<Partners | null>(null);
   const [error, setError] = useState<string>('');
-  const { user} = useAuth();
+  const { user, token} = useAuth();
 
   const [copied, setCopied] = useState(false);
+  
 
 const handleCopy = () => {
   navigator.clipboard.writeText(currentPartner?.partnerID || "");
@@ -32,7 +33,9 @@ const handleCopy = () => {
     const getCurrentPartner = async () => {
       try {
         const response = await axios.get(`${API_URL}/api/partner/current-partner`, {
-       withCredentials:true,
+          headers:{
+            Authorization :`Bearer ${token}`
+          },
         });
 
         const partnerData: Partners = response.data.currenctParners;
