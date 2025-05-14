@@ -5,6 +5,7 @@ import axios from "axios";
 import { API_URL } from "../constants/API_URL";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 const PartnerSection: React.FC = () => {
   const [accepted, setAccepted] = useState(false);
@@ -16,6 +17,7 @@ const PartnerSection: React.FC = () => {
   const [entrepreneuriatConfirmed, setEntrepreneuriatConfirmed] = useState(false);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false)
+  const {token} = useAuth()
 
   const navigate = useNavigate();
 
@@ -47,7 +49,9 @@ const PartnerSection: React.FC = () => {
           amount: 8000,
         },
         {
-    withCredentials:true
+         headers:{
+          Authorization :`Bearer ${token}`
+         }
         }
       );
      
