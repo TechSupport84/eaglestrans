@@ -22,10 +22,11 @@ interface Partner {
   updatedAt: string;
 }
 
-const {token} = useAuth()
+
 
 const ConfirmedPartnersPage: React.FC = () => {
   const [confirmedPartners, setConfirmedPartners] = useState<Partner[]>([]);
+  const {token} = useAuth()
   useEffect(() => {
     // Fetch confirmed partners from your API
     const fetchConfirmedPartners = async () => {
