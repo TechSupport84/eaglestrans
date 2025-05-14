@@ -84,7 +84,7 @@ function RegisterPage() {
               value={tel}
               onChange={(e) => setTel(e.target.value)}
               className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500"
-              placeholder="Entrez votre numéro de téléphone"
+              placeholder="Entrez votre numéro de téléphone EX: +22574****"
             />
           </div>
 
