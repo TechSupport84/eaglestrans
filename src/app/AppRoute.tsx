@@ -5,7 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import NavBar from "./NavBar";
+// import NavBar from "./NavBar";
 import FooterPage from "../components/Footer_page";
 import ServicesPage from "../pages/ServicesPage";
 import Reservation_Page from "../pages/Reservation_Page";
@@ -27,7 +27,7 @@ function AppRoute() {
 
   return (
     <Router>
-      {isAuthenticated && <NavBar />}
+
 
       <Routes>
         {/* Public Routes */}

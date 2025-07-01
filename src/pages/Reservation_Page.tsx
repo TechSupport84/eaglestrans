@@ -4,7 +4,7 @@ import {
   FaRoute,
   FaClock,
   FaCheckCircle,
-  FaTimesCircle
+  FaTimesCircle,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
@@ -13,6 +13,8 @@ import { useAuth } from "../hooks/useAuth";
 import { API_URL } from "../constants/API_URL";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 interface Partner {
   _id: string;
@@ -38,43 +40,46 @@ export interface Reservation {
   dropLocation: string;
   duration: number;
   price: number;
-  status: string;
-  orderDate:string,
-  orderHour:string,
+  status: "pending" | "accepted" | "completed" | string;
+  orderDate: string;
+  orderHour: string;
   createdAt: string;
   updatedAt: string;
   __v: number;
 }
 
+interface SuggestionItem {
+  display_name: string;
+}
+
+const BOLT_GREEN = "#00B140";
+const BOLT_GREEN_LIGHT = "#e6f4ea";
+const BOLT_DARK_GREY = "#333333";
+const BOLT_GREY_LIGHT = "#f0f0f0";
+
+const NAIROBI_COORDINATES: [number, number] = [-1.286389, 36.817223];
+
 const ReservationPage: React.FC = () => {
-  const [pickup, setPickup] = useState("");
-  const [drop, setDrop] = useState("");
+  const [pickup, setPickup] = useState<string>("");
+  const [drop, setDrop] = useState<string>("");
   const [pickupSuggestions, setPickupSuggestions] = useState<string[]>([]);
   const [dropSuggestions, setDropSuggestions] = useState<string[]>([]);
-  const [orderDate, setOrderDate] = useState<string |number>("")
-  const [orderHour, setOrderHour] = useState<string>("")
+  const [orderDate, setOrderDate] = useState<string>("");
+  const [orderHour, setOrderHour] = useState<string>("");
   const [reservation, setReservation] = useState<Reservation | null>(null);
-  const { user, token, fetchUser} = useAuth();
-  const [loading, setLoading] = useState<boolean>(false)
+  const { user, token, fetchUser } = useAuth();
+  const [loading, setLoading] = useState<boolean>(false);
   const pickupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-useEffect(() => {
-  if (!user?.id) {
-    (async () => {
-      await fetchUser();
-    })();
-  }
-}, [user?.id, fetchUser]);
   useEffect(() => {
-    console.log("user", user); // Debugging
-  }, [user]);
+    if (!user?.id) {
+      (async () => {
+        await fetchUser();
+      })();
+    }
+  }, [user?.id, fetchUser]);
 
-  if (!user) {
-    return <p>Chargement de l'utilisateur...</p>; // Or redirect / show login
-  }
-
-  console.log("user", user?.id)
   const fetchSuggestions = async (
     query: string,
     setter: React.Dispatch<React.SetStateAction<string[]>>
@@ -85,8 +90,8 @@ useEffect(() => {
           query
         )}`
       );
-      const data = await res.json();
-      setter(data.map((item: any) => item.display_name));
+      const data: SuggestionItem[] = await res.json();
+      setter(data.map((item) => item.display_name));
     } catch {
       setter([]);
     }
@@ -125,18 +130,16 @@ useEffect(() => {
   };
 
   const loadReservation = async () => {
-    if (!user?.id) return console.log("Error")
+    if (!user?.id) return;
     try {
       const { data } = await axios.get<Reservation>(
         `${API_URL}/api/order/user/${user.id}`,
-        { 
-          headers:{
-            Authorization:`Bearer ${token}`
-          }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      console.log("Log")
-      console.log("Orders",data)
       setReservation(data);
     } catch {
       setReservation(null);
@@ -145,33 +148,31 @@ useEffect(() => {
 
   useEffect(() => {
     loadReservation();
-  }, [user, token, reservation]);
+  }, [user, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true)
+    setLoading(true);
     try {
       await axios.post(
         `${API_URL}/api/order/create`,
-        { pickupLocation: pickup, dropLocation: drop ,orderDate, orderHour},
-         {
-          headers:{
-            Authorization: `Bearer ${token}`
-          }
-         }
+        { pickupLocation: pickup, dropLocation: drop, orderDate, orderHour },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       toast.success("Réservation effectuée !");
       setPickup("");
       setDrop("");
-      setOrderHour(" ")
-      setOrderDate(" ")
-      
+      setOrderHour("");
+      setOrderDate("");
       loadReservation();
-      setLoading(false)
     } catch {
       toast.error("Échec de la réservation.");
-      setLoading(false)
     }
+    setLoading(false);
   };
 
   const handleAccept = async () => {
@@ -181,10 +182,10 @@ useEffect(() => {
         `${API_URL}/api/order/${reservation._id}/accept`,
         {},
         {
-          headers:{
-            Authorization: `Bearer ${token}`
-          }
-         }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       toast.success("Commande acceptée !");
       setReservation(data.order);
@@ -200,10 +201,10 @@ useEffect(() => {
         `${API_URL}/api/order/${reservation._id}/complete`,
         {},
         {
-          headers:{
-            Authorization: `Bearer ${token}`
-          }
-         }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       toast.success("Commande terminée !");
       setReservation(data.order);
@@ -213,154 +214,356 @@ useEffect(() => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
-      {reservation && (
-        <motion.div
-          className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-6 mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <FaClock /> Statut de la commande
-            </h2>
-            <span
-              className={`px-3 py-1 font-semibold rounded-full text-sm uppercase ${
-                reservation.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                reservation.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                'bg-yellow-100 text-yellow-800'
-              }`}
-            >
-              {reservation.status}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-            <div>
-              <p className="flex items-center gap-2">
-                <FaMapMarkerAlt className="text-blue-500" />
-                <strong>Départ :</strong> {reservation.pickupLocation}
-              </p>
-              <p className="flex items-center gap-2 mt-2">
-                <FaRoute className="text-purple-500" />
-                <strong>Destination :</strong> {reservation.dropLocation}
-              </p>
-              <p>
-                <span>Heure : <span className="text-blue-600">{reservation.orderHour} Heure/Min </span></span>
-              </p>
-              <p>
-                <span>Date du  depart: <span className="text-blue-600">{new Date(reservation.orderDate).toDateString()}</span> </span>
-              </p>
-            </div>
-            <div>
-              <p><strong>Durée :</strong> {reservation.duration} min</p>
-              <p className="mt-2"><strong>Prix :</strong> {reservation.price.toLocaleString()} FCFA</p>
-            </div>
-          </div>
-          <div className="mt-6 pt-4 border-t border-gray-200 text-gray-700">
-            <h3 className="text-lg font-semibold mb-2">Détails du partenaire</h3>
-            <p><strong>Véhicule :</strong> {reservation.partner.carName}</p>
-            <p><strong>Immatriculation :</strong> {reservation.partner.plaqueNumber}</p>
-            <p><strong>Téléphone :</strong> {reservation.partner.tel}</p>
-            <p><strong>Ville :</strong> {reservation.partner.city}</p>
-          </div>
-          <div className="mt-6 text-center flex justify-center gap-4">
-            {reservation.status === 'pending' && (
-              <button
-                onClick={handleAccept}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
-              >
-                <FaCheckCircle /> Accepter
-              </button>
-            )}
-            {reservation.status === 'accepted' && (
-              <button
-                onClick={handleComplete}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-              >
-                <FaTimesCircle /> Terminer
-              </button>
-            )}
-          </div>
-        </motion.div>
-      )}
-      {/* Booking Form */}
-      <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-6">Nouvelle Réservation</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Point de départ</label>
-            <input
-              type="text"
-              value={pickup}
-              onChange={(e) => setPickup(e.target.value)}
-              placeholder="Entrez votre point de départ"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            {pickupSuggestions.length > 0 && (
-              <ul className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto">
-                {pickupSuggestions.map((place, idx) => (
-                  <li
-                    key={idx}
-                    onClick={() => selectPickup(place)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {place}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Destination</label>
-            <input
-              type="text"
-              value={drop}
-              onChange={(e) => setDrop(e.target.value)}
-              placeholder="Entrez votre destination"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
-              required
-            />
-            {dropSuggestions.length > 0 && (
-              <ul className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto">
-                {dropSuggestions.map((place, idx) => (
-                  <li
-                    key={idx}
-                    onClick={() => selectDrop(place)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {place}
-                  </li>
-                ))}
-              </ul>
-            )}
+    <main className="min-h-screen bg-white p-6 text-gray-900">
+      {/* Title */}
+      <h1
+        className="text-4xl font-extrabold mb-4"
+        style={{ color: BOLT_GREEN, textAlign: "center" }}
+      >
+        Eagles
+      </h1>
 
-           <label className="block text-sm font-medium text-gray-700 mb-1">Heure: </label>
-            <input
-              type="time"
-              value={orderHour}
-              onChange={(e) => setOrderHour(e.target.value)}
-              placeholder="Entrez votre destination"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
-              required
-            />
-            <label className="block text-sm font-medium text-gray-700 mb-1">La Date</label>
-            <input
-              type="date"
-              value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              placeholder="Entrez votre destination"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
+      {/* Buttons */}
+      <div className="flex justify-center gap-6 mb-8">
+        <button
+          type="button"
+          className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
+          style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = BOLT_GREEN;
+            e.currentTarget.style.color = "white";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+            e.currentTarget.style.color = BOLT_GREEN;
+          }}
+          onClick={() => {
+            window.location.href = "tel:+1234567890"; // Change phone number here
+          }}
+          aria-label="Appeler"
+        >
+          Appeler
+        </button>
+
+        <button
+          type="button"
+          className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
+          style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = BOLT_GREEN;
+            e.currentTarget.style.color = "white";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+            e.currentTarget.style.color = BOLT_GREEN;
+          }}
+          onClick={() => {
+            window.location.href = "/devenir-partenaire"; // Change URL here
+          }}
+          aria-label="Devenir partenaire"
+        >
+          Devenir partenaire
+        </button>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-6 w-full">
+        {/* Map */}
+        <div className="w-full md:w-1/2 h-[600px] rounded-lg overflow-hidden shadow-md border border-gray-200">
+          <MapContainer
+            center={NAIROBI_COORDINATES}
+            zoom={13}
+            className="h-full w-full"
           >
-            <AiOutlineUser size={20} /> {loading?"Commande en cours..." :"Réserver maintenant"}
-          </button>
-        </form>
+            <TileLayer
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={NAIROBI_COORDINATES}>
+              <Popup>Votre position actuelle</Popup>
+            </Marker>
+          </MapContainer>
+        </div>
+
+        {/* Reservation & Form */}
+        <div className="w-full md:w-1/2 space-y-6 overflow-y-auto">
+          {/* Reservation Status */}
+          {reservation && (
+            <motion.div
+              className="bg-white shadow-lg rounded-lg p-6 border border-gray-200"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2
+                  className="text-xl font-bold flex items-center gap-2"
+                  style={{ color: BOLT_DARK_GREY }}
+                >
+                  <FaClock /> Statut de la commande
+                </h2>
+                <span
+                  className={`px-3 py-1 font-semibold rounded-full text-sm uppercase`}
+                  style={{
+                    backgroundColor:
+                      reservation.status === "accepted"
+                        ? BOLT_GREEN_LIGHT
+                        : reservation.status === "completed"
+                        ? "#cce5ff"
+                        : "#fff3cd",
+                    color:
+                      reservation.status === "accepted"
+                        ? BOLT_GREEN
+                        : reservation.status === "completed"
+                        ? "#004085"
+                        : "#856404",
+                  }}
+                >
+                  {reservation.status}
+                </span>
+              </div>
+              <div className="text-sm space-y-2 text-gray-700">
+                <p>
+                  <FaMapMarkerAlt
+                    className="inline mr-2"
+                    style={{ color: BOLT_GREEN }}
+                  />{" "}
+                  Départ : {reservation.pickupLocation}
+                </p>
+                <p>
+                  <FaRoute
+                    className="inline mr-2"
+                    style={{ color: BOLT_GREEN }}
+                  />{" "}
+                  Destination : {reservation.dropLocation}
+                </p>
+                <p>
+                  Heure :{" "}
+                  <span style={{ color: BOLT_GREEN }}>{reservation.orderHour}</span>
+                </p>
+                <p>
+                  Date :{" "}
+                  <span style={{ color: BOLT_GREEN }}>
+                    {new Date(reservation.orderDate).toDateString()}
+                  </span>
+                </p>
+                <p>Durée : {reservation.duration} min</p>
+                <p>Prix : {reservation.price.toLocaleString()} FCFA</p>
+              </div>
+              <div className="mt-4 text-sm border-t pt-2 border-gray-200">
+                <h3 className="font-semibold" style={{ color: BOLT_DARK_GREY }}>
+                  Détails du partenaire
+                </h3>
+                <p>Véhicule : {reservation.partner.carName}</p>
+                <p>Immatriculation : {reservation.partner.plaqueNumber}</p>
+                <p>Téléphone : {reservation.partner.tel}</p>
+                <p>Ville : {reservation.partner.city}</p>
+              </div>
+              <div className="mt-4 flex gap-3">
+                {reservation.status === "pending" && (
+                  <button
+                    onClick={handleAccept}
+                    className="px-4 py-2 rounded flex items-center gap-2 font-semibold transition"
+                    style={{
+                      backgroundColor: BOLT_GREEN,
+                      color: "white",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        "#009933";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        BOLT_GREEN;
+                    }}
+                  >
+                    <FaCheckCircle /> Accepter
+                  </button>
+                )}
+                {reservation.status === "accepted" && (
+                  <button
+                    onClick={handleComplete}
+                    className="px-4 py-2 rounded flex items-center gap-2 font-semibold transition"
+                    style={{
+                      backgroundColor: "#444",
+                      color: "white",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        "#222";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        "#444";
+                    }}
+                  >
+                    <FaTimesCircle /> Terminer
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Booking Form */}
+          <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+            <h2
+              className="text-2xl font-bold mb-6"
+              style={{ color: BOLT_DARK_GREY }}
+            >
+              Nouvelle Réservation
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="relative">
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: BOLT_DARK_GREY }}
+                >
+                  Point de départ
+                </label>
+                <input
+                  type="text"
+                  value={pickup}
+                  onChange={(e) => setPickup(e.target.value)}
+                  placeholder="Entrez votre point de départ"
+                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                  style={{
+                    borderColor: "#ccc",
+                    boxShadow: `0 0 0 3px transparent`,
+                  }}
+                  onFocus={(e) =>
+                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                  }
+                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                  required
+                />
+                {pickupSuggestions.length > 0 && (
+                  <ul
+                    className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto"
+                    style={{ borderColor: "#ccc" }}
+                  >
+                    {pickupSuggestions.map((place, idx) => (
+                      <li
+                        key={idx}
+                        onClick={() => selectPickup(place)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {place}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="relative">
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: BOLT_DARK_GREY }}
+                >
+                  Destination
+                </label>
+                <input
+                  type="text"
+                  value={drop}
+                  onChange={(e) => setDrop(e.target.value)}
+                  placeholder="Entrez votre destination"
+                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                  style={{
+                    borderColor: "#ccc",
+                    boxShadow: `0 0 0 3px transparent`,
+                  }}
+                  onFocus={(e) =>
+                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                  }
+                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                  required
+                />
+                {dropSuggestions.length > 0 && (
+                  <ul
+                    className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto"
+                    style={{ borderColor: "#ccc" }}
+                  >
+                    {dropSuggestions.map((place, idx) => (
+                      <li
+                        key={idx}
+                        onClick={() => selectDrop(place)}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {place}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: BOLT_DARK_GREY }}
+                >
+                  Heure
+                </label>
+                <input
+                  type="time"
+                  value={orderHour}
+                  onChange={(e) => setOrderHour(e.target.value)}
+                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                  style={{
+                    borderColor: "#ccc",
+                    boxShadow: `0 0 0 3px transparent`,
+                  }}
+                  onFocus={(e) =>
+                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                  }
+                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: BOLT_DARK_GREY }}
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={orderDate}
+                  onChange={(e) => setOrderDate(e.target.value)}
+                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                  style={{
+                    borderColor: "#ccc",
+                    boxShadow: `0 0 0 3px transparent`,
+                  }}
+                  onFocus={(e) =>
+                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                  }
+                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+                style={{
+                  backgroundColor: BOLT_GREEN,
+                  color: "white",
+                }}
+                disabled={loading}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                    "#009933";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                    BOLT_GREEN;
+                }}
+              >
+                <AiOutlineUser size={20} />{" "}
+                {loading ? "Commande en cours..." : "Réserver maintenant"}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
       <ToastContainer position="bottom-right" />
     </main>
