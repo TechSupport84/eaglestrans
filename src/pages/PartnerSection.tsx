@@ -1,34 +1,42 @@
 import { motion } from "framer-motion";
-import { useState, useEffect, FormEvent} from "react";
-import { Car, Phone, MapPin, CreditCard, BadgeDollarSign, CheckCircle } from "lucide-react";
+import { useState,  FormEvent } from "react";
+import {
+  Car,
+  Phone,
+  MapPin,
+  CreditCard,
+  BadgeDollarSign,
+  CheckCircle,
+} from "lucide-react";
 import axios from "axios";
 import { API_URL } from "../constants/API_URL";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-const PartnerSection: React.FC = () => {
+interface PartnerModalProps {
+  onClose: () => void;
+  visible: boolean;
+}
+
+const PartnerModal: React.FC<PartnerModalProps> = ({ onClose, visible }) => {
   const [accepted, setAccepted] = useState(false);
   const [carName, setCarName] = useState("");
   const [plaqueNumber, setPlaqueNumber] = useState("");
   const [tel, setTel] = useState("");
   const [city, setCity] = useState("");
-  const [justSubmitted, setJustSubmitted] = useState(false);
   const [entrepreneuriatConfirmed, setEntrepreneuriatConfirmed] = useState(false);
   const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false)
-  const {token} = useAuth()
-
+  const [loading, setLoading] = useState<boolean>(false);
+  const { token } = useAuth();
   const navigate = useNavigate();
-
-
 
   const handleCreatePartner = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!/^\d{10}$/.test(tel)) {
-    setError("Le numéro de téléphone doit contenir exactement 10 chiffres.");
-    return 
+    if (!/^[0-9]{10}$/.test(tel)) {
+      setError("Le numéro de téléphone doit contenir exactement 10 chiffres.");
+      return;
     }
 
     if (!carName || !plaqueNumber || !tel || !city) {
@@ -36,83 +44,51 @@ const PartnerSection: React.FC = () => {
       toast.error("Veuillez remplir tous les champs.");
       return;
     }
-  
-    setLoading(true)
+
+    setLoading(true);
     try {
       await axios.post(
         `${API_URL}/api/partner/create-partner`,
         {
           carName,
-          plaqueNumber:String(plaqueNumber),
+          plaqueNumber: String(plaqueNumber),
           tel,
           city,
           amount: 8000,
         },
         {
-         headers:{
-          Authorization :`Bearer ${token}`
-         }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-     
+
       setCarName("");
       setPlaqueNumber("");
       setTel("");
       setCity("");
       setAccepted(false);
-      setJustSubmitted(true);
+      setEntrepreneuriatConfirmed(false);
       setError("");
-      setLoading(false)
-    
+      setLoading(false);
+
       toast.success("Félicitations ! Contactez notre secrétaire pour effectuer le paiement.");
       navigate("/confirmed");
+      onClose();
     } catch (err) {
       setError("Une erreur est survenue. Veuillez réessayer.");
       toast.error("Une erreur est survenue. Veuillez réessayer.");
-      setLoading(false)
-      console.error(err);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (justSubmitted) {
-      toast.success("Contactez notre secrétaire pour enregistrer votre véhicule.");
-      setJustSubmitted(false);
-    }
-  }, [justSubmitted]);
+  if (!visible) return null;
 
   return (
-    <section className="flex flex-col md:flex-row items-start justify-center gap-10 bg-gray-100 p-8 md:p-16 rounded-lg shadow-xl">
-      {/* Text Section */}
-      <div className="md:w-1/2 space-y-6">
-        <motion.h2
-          className="text-4xl font-bold text-blue-700"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          Devenir Partenaire
-        </motion.h2>
-        <p className="text-gray-700 text-lg">
-          Vous êtes propriétaire d’un véhicule ou chauffeur expérimenté ? Rejoignez <span className="font-semibold">EAGLE'S TRANS</span> et maximisez vos revenus !
-        </p>
-        <ul className="text-gray-600 space-y-2">
-          <li className="flex items-center gap-2">
-            <span className="text-green-600 text-lg">✔</span> Des trajets réguliers
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-600 text-lg">✔</span> Un accompagnement professionnel
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-green-600 text-lg">✔</span> Des paiements transparents et rapides
-          </li>
-        </ul>
-      </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl overflow-y-auto max-h-full p-6">
+        <h2 className="text-2xl font-bold text-center text-blue-700 mb-4">Devenir Partenaire</h2>
 
-      {/* Form Section */}
-      <div className="md:w-1/2 w-full bg-white p-6 rounded-xl shadow-lg">
-        <h3 className="text-2xl font-bold text-center text-green-700 mb-6">Formulaire d'inscription</h3>
-        
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 mb-4 rounded">
             {error}
@@ -137,7 +113,7 @@ const PartnerSection: React.FC = () => {
               type="text"
               value={plaqueNumber}
               onChange={(e) => setPlaqueNumber(e.target.value)}
-              placeholder="Numéro de plaque Ex: D4T4 (4 digits)"
+              placeholder="Numéro de plaque Ex: D4T4"
               className="w-full outline-none"
             />
           </div>
@@ -175,8 +151,7 @@ const PartnerSection: React.FC = () => {
 
             <div className="mb-3">
               <label className="flex items-center font-medium text-gray-700 mb-1">
-                <CreditCard className="w-4 h-4 mr-2" />
-                Paiement
+                <CreditCard className="w-4 h-4 mr-2" /> Paiement
               </label>
               <input
                 type="number"
@@ -218,13 +193,21 @@ const PartnerSection: React.FC = () => {
             whileHover={accepted && entrepreneuriatConfirmed ? { scale: 1.05 } : {}}
             whileTap={accepted && entrepreneuriatConfirmed ? { scale: 0.95 } : {}}
           >
-          {loading ? "Chargement..." : "Confirmez"}
+            {loading ? "Chargement..." : "Confirmez"}
           </motion.button>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-4 w-full text-center text-sm text-blue-500 hover:underline"
+          >
+            Annuler
+          </button>
         </form>
         <ToastContainer />
       </div>
-    </section>
+    </div>
   );
 };
 
-export default PartnerSection;
+export default PartnerModal;

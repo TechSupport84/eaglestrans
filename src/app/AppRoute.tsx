@@ -5,7 +5,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-// import NavBar from "./NavBar";
 import FooterPage from "../components/Footer_page";
 import ServicesPage from "../pages/ServicesPage";
 import Reservation_Page from "../pages/Reservation_Page";
@@ -19,41 +18,117 @@ import LoginPage from "../screens/LoginPage";
 import RegisterPage from "../screens/RegisterPage";
 import Home_Page from "../pages/Home_Page";
 import NotFound from "../components/NotFound";
+import { JSX, ReactNode } from "react";
 
-function AppRoute() {
+// Type definition for props
+interface RouteProps {
+  children: ReactNode;
+}
+
+function PrivateRoute({ children }: RouteProps) {
   const { user, token } = useAuth();
+  return user && token ? children : <Navigate to="/login" />;
+}
 
-  const isAuthenticated = user && token;
+function AdminRoute({ children }: RouteProps) {
+  const { user, token } = useAuth();
+  return user && token && user.role === "admin" ? children : <Navigate to="/" />;
+}
+
+function AppRoute(): JSX.Element {
+  const { user, token } = useAuth();
+  const isAuthenticated = !!user && !!token;
 
   return (
     <Router>
-
-
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
-        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
+        <Route
+          path="/login"
+          element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/register"
+          element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />}
+        />
 
         {/* Protected Routes */}
-        {isAuthenticated && (
-          <>
-            <Route path="/" element={<Reservation_Page />} />
-            <Route path="/home" element={<Home_Page />} />
-            <Route path="/service" element={<ServicesPage />} />
-            <Route path="/partner" element={<PartnerSection />} />
-            <Route path="/appropos" element={<AproposContact />} />
-            <Route path="/policy" element={<PolicyPage />} />
-            <Route path="/confirmed" element={<ConfirmedPartner />} />
-            <Route path="/success" element={<SuccessPage />} />
-          </>
-        )}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Reservation_Page />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/home"
+          element={
+            <PrivateRoute>
+              <Home_Page />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/service"
+          element={
+            <PrivateRoute>
+              <ServicesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/partner"
+          element={
+          
+              <PartnerSection />
+           
+          }
+        />
+        <Route
+          path="/appropos"
+          element={
+            <PrivateRoute>
+              <AproposContact />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/policy"
+          element={
+            <PrivateRoute>
+              <PolicyPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/confirmed"
+          element={
+            <PrivateRoute>
+              <ConfirmedPartner />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/success"
+          element={
+            <PrivateRoute>
+              <SuccessPage />
+            </PrivateRoute>
+          }
+        />
 
-        {/* Admin Route */}
-        {isAuthenticated && user.role === "admin" && (
-          <Route path="/dashboard" element={<Dashboard />} />
-        )}
+        {/* Admin-only Route */}
+        <Route
+          path="/dashboard"
+          element={
+            <AdminRoute>
+              <Dashboard />
+            </AdminRoute>
+          }
+        />
 
-        {/* 404 Route */}
+        {/* 404 Fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
 

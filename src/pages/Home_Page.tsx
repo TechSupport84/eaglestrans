@@ -1,14 +1,16 @@
-import { useAuth } from "../hooks/useAuth";
+import { JSX, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useAuth } from "../hooks/useAuth";
+import PartnerModal from "./PartnerSection";
 
-export default function Home_Page() {
-  const { user, logout } = useAuth() 
+export default function Home_Page(): JSX.Element | null {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showPartnerModal, setShowPartnerModal] = useState(false);
 
   useEffect(() => {
     if (!user) {
-      navigate("/home"); // Redirect to the home page if no user is logged in
+      navigate("/home"); // Redirect to public home if not authenticated
     }
   }, [user, navigate]);
 
@@ -17,7 +19,7 @@ export default function Home_Page() {
   };
 
   const handlePartnerNavigation = () => {
-    navigate("/partner");
+    setShowPartnerModal(true);
   };
 
   const handleCall = () => {
@@ -29,87 +31,92 @@ export default function Home_Page() {
   };
 
   const handleLogout = () => {
-    logout(); // Call logout function from the auth hook
-    navigate("/login"); // Redirect to the login page after logout
+    logout();
+    navigate("/login");
   };
 
+  if (!user) return null;
 
-
-  return user ? (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 py-8">
-      {/* Hero Section */}
-      <div className="w-full max-w-3xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-center py-8 px-6 rounded-xl shadow-lg mb-8 animate-fade-in">
-        <h1 className="text-3xl font-bold animate-bounce">Votre trajet, notre engagement !</h1>
-        <p className="mt-3 text-lg">
-          Voyagez en toute sécurité et confort avec nos services de VTC à Yamoussoukro et au-delà.
-        </p>
-      </div>
-
-      {/* Profile Section */}
-      <div className="w-full max-w-4xl bg-white shadow-xl rounded-xl p-8 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 md:space-x-8">
-        <div className="text-center md:text-left">
-          <h2 className="text-2xl font-bold text-gray-800">Bienvenue, {user.username}</h2>
-          <p className="text-gray-500 mt-2 text-sm">Merci de votre confiance!</p>
+  return (
+    <>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 py-8">
+        {/* Hero Section */}
+        <div className="w-full max-w-3xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-center py-8 px-6 rounded-xl shadow-lg mb-8 animate-fade-in">
+          <h1 className="text-3xl font-bold animate-bounce">Votre trajet, notre engagement !</h1>
+          <p className="mt-3 text-lg">
+            Voyagez en toute sécurité et confort avec nos services de VTC à Yamoussoukro et au-delà.
+          </p>
         </div>
-        <div className="flex flex-col items-center space-y-4">
-          <img
-            src={user.profileUrl ? user.profileUrl : "./user.png"}
-            alt="Profile"
-            className="w-20 h-20 rounded-full border-2 border-gray-300 shadow-sm"
-          />
-          <p className="text-gray-600"> {user.email}</p>
+
+        {/* Profile Section */}
+        <div className="w-full max-w-4xl bg-white shadow-xl rounded-xl p-8 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0 md:space-x-8">
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl font-bold text-gray-800">Bienvenue, {user.username}</h2>
+            <p className="text-gray-500 mt-2 text-sm">Merci de votre confiance!</p>
+          </div>
+          <div className="flex flex-col items-center space-y-4">
+            <img
+              src={user.profileUrl || "./user.png"}
+              alt="Profile"
+              className="w-20 h-20 rounded-full border-2 border-gray-300 shadow-sm"
+            />
+            <p className="text-gray-600">{user.email}</p>
+            <button
+              onClick={handleLogout}
+              className="px-5 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
+            >
+              Déconnexion
+            </button>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-8 w-full max-w-4xl flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6">
           <button
-            onClick={handleLogout} // Handle logout on button click
-            className="px-5 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
+            onClick={handleNavigation}
+            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 w-full md:w-auto"
           >
-            Déconnexion
+            Réserver un Trajet
+          </button>
+          <button
+            onClick={handlePartnerNavigation}
+            className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:bg-orange-700 transition duration-300 w-full md:w-auto"
+          >
+            Devenir Partenaire
+          </button>
+          <button
+            onClick={handleCall}
+            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto"
+          >
+            Appeler Maintenant
+          </button>
+          <button
+            onClick={handleEmail}
+            className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition duration-300 w-full md:w-auto"
+          >
+            Contact Email
           </button>
         </div>
+
+        {/* Support Info */}
+        <div className="mt-6 text-center text-gray-500 text-xs">
+          <p>
+            Support Technique:{" "}
+            <a
+              href="https://jeancyportfolio.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              Jeancy Mpoyi
+            </a>
+          </p>
+          <p className="mt-1">&copy; {new Date().getFullYear()} Eagle's Trans. Tous droits réservés.</p>
+        </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="mt-8 w-full max-w-4xl flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6">
-        <button
-          onClick={handleNavigation}
-          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 w-full md:w-auto"
-        >
-          Réserver un Trajet
-        </button>
-        <button
-          onClick={handlePartnerNavigation}
-          className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:bg-orange-700 transition duration-300 w-full md:w-auto"
-        >
-          Devenir Partenaire
-        </button>
-        <button
-          onClick={handleCall}
-          className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300 w-full md:w-auto"
-        >
-          Appeler Maintenant
-        </button>
-        <button
-          onClick={handleEmail}
-          className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition duration-300 w-full md:w-auto"
-        >
-          Contact Email
-        </button>
-      </div>
-
-      {/* Support Info */}
-      <div className="mt-6 text-center text-gray-500 text-xs">
-        <p>
-          Support Technique:{" "}
-          <a
-            href="https://jeancyportfolio.netlify.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
-          >
-            Jeancy Mpoyi
-          </a>
-        </p>
-        <p className="mt-1">&copy; {new Date().getFullYear()} Eagle's Trans. Tous droits réservés.</p>
-      </div>
-    </div>
-  ) : null;
+      {/* Partner Modal */}
+      <PartnerModal visible={showPartnerModal} onClose={() => setShowPartnerModal(false)} />
+    </>
+  );
 }

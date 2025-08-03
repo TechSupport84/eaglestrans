@@ -31,7 +31,7 @@ function RegisterPage() {
     }
 
     try {
-      await register(username, email, password, tel);
+      await register(username, email,tel, password);
       setUsername("");
       setEmail("");
       setTel("");
