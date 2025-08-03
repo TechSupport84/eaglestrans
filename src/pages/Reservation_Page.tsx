@@ -266,7 +266,24 @@ const ReservationPage: React.FC = () => {
   >
     Devenir partenaire
   </button>
-
+ {/* Louer  Vehicle */}
+   <button
+    type="button"
+    className="min-w-[150px] px-5 py-2 rounded border-2 font-semibold text-center transition-colors duration-200"
+    style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = BOLT_GREEN;
+      e.currentTarget.style.color = "white";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "transparent";
+      e.currentTarget.style.color = BOLT_GREEN;
+    }}
+    onClick={()=>{}}
+    aria-label="Logout"
+  >
+    Louer Vehicule
+  </button>
   {/* Admin Only: Dashboard Button */}
   {user?.role === "admin" && (
     <button
