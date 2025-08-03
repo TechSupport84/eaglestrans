@@ -228,89 +228,85 @@ const ReservationPage: React.FC = () => {
         Eagles
       </h1>
 
-      {/* Buttons */}
-      <div className="flex justify-center gap-6 mb-8">
-        <button
-          type="button"
-          className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
-          style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = BOLT_GREEN;
-            e.currentTarget.style.color = "white";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = BOLT_GREEN;
-          }}
-          onClick={() => {
-            window.location.href = "tel:+1234567890"; // Change phone number here
-          }}
-          aria-label="Appeler"
-        >
-          Appeler
-        </button>
+     <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-8">
+  {/* Call Button */}
+  <button
+    type="button"
+    className="min-w-[150px] px-5 py-2 rounded border-2 font-semibold text-center transition-colors duration-200"
+    style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = BOLT_GREEN;
+      e.currentTarget.style.color = "white";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "transparent";
+      e.currentTarget.style.color = BOLT_GREEN;
+    }}
+    onClick={() => window.location.href = "tel:+1234567890"}
+    aria-label="Appeler"
+  >
+    Appeler
+  </button>
 
-        <button
-          type="button"
-          className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
-          style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = BOLT_GREEN;
-            e.currentTarget.style.color = "white";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = BOLT_GREEN;
-          }}
-          onClick={() => setShowModal(true)}
-          aria-label="Devenir partenaire"
-        >
-          Devenir partenaire
-        </button>
-   {user?.role ==="admin" &&(
-         <button
-          type="button"
-          className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
-          style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = BOLT_GREEN;
-            e.currentTarget.style.color = "white";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.color = BOLT_GREEN;
-          }}
-          onClick={() => navigate('/dashboard')}
-          aria-label="Dashboard"
-        >
-          Dashboard
-        </button>
-        )}
+  {/* Become Partner Button */}
+  <button
+    type="button"
+    className="min-w-[150px] px-5 py-2 rounded border-2 font-semibold text-center transition-colors duration-200"
+    style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = BOLT_GREEN;
+      e.currentTarget.style.color = "white";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "transparent";
+      e.currentTarget.style.color = BOLT_GREEN;
+    }}
+    onClick={() => setShowModal(true)}
+    aria-label="Devenir partenaire"
+  >
+    Devenir partenaire
+  </button>
 
-        <button
-  type="button"
-  className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
-  style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = BOLT_GREEN;
-    e.currentTarget.style.color = "white";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor = "transparent";
-    e.currentTarget.style.color = BOLT_GREEN;
-  }}
-  onClick={() => {
-    // Your logout logic here, for example:
-    // clear auth tokens, call logout API, then redirect
-    // Example redirect:
-      logout()
-  }}
-  aria-label="Logout"
->
-  Logout
-</button>
+  {/* Admin Only: Dashboard Button */}
+  {user?.role === "admin" && (
+    <button
+      type="button"
+      className="min-w-[150px] px-5 py-2 rounded border-2 font-semibold text-center transition-colors duration-200"
+      style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = BOLT_GREEN;
+        e.currentTarget.style.color = "white";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "transparent";
+        e.currentTarget.style.color = BOLT_GREEN;
+      }}
+      onClick={() => navigate('/dashboard')}
+      aria-label="Dashboard"
+    >
+      Dashboard
+    </button>
+  )}
 
-      </div>
+  {/* Logout Button */}
+  <button
+    type="button"
+    className="min-w-[150px] px-5 py-2 rounded border-2 font-semibold text-center transition-colors duration-200"
+    style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = BOLT_GREEN;
+      e.currentTarget.style.color = "white";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = "transparent";
+      e.currentTarget.style.color = BOLT_GREEN;
+    }}
+    onClick={logout}
+    aria-label="Logout"
+  >
+    Logout
+  </button>
+</div>
 
       {/* Reservation & Form */}
       <div className="w-full max-w-5xl mx-auto space-y-6">
