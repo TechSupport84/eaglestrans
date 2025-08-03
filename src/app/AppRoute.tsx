@@ -8,7 +8,6 @@ import { useAuth } from "../hooks/useAuth";
 import FooterPage from "../components/Footer_page";
 import ServicesPage from "../pages/ServicesPage";
 import Reservation_Page from "../pages/Reservation_Page";
-import PartnerSection from "../pages/PartnerSection";
 import AproposContact from "../pages/AproposContact";
 import PolicyPage from "./PolicyPage";
 import ConfirmedPartner from "../pages/ConfirmedPartner";
@@ -77,14 +76,7 @@ function AppRoute(): JSX.Element {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/partner"
-          element={
-          
-              <PartnerSection />
-           
-          }
-        />
+ 
         <Route
           path="/appropos"
           element={

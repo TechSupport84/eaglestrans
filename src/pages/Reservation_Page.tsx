@@ -15,6 +15,10 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import CreatePartnerModal from "./CreatePartnerModal";
+import { useNavigate } from 'react-router-dom';
+
+
 
 interface Partner {
   _id: string;
@@ -55,7 +59,6 @@ interface SuggestionItem {
 const BOLT_GREEN = "#00B140";
 const BOLT_GREEN_LIGHT = "#e6f4ea";
 const BOLT_DARK_GREY = "#333333";
-const BOLT_GREY_LIGHT = "#f0f0f0";
 
 const NAIROBI_COORDINATES: [number, number] = [-1.286389, 36.817223];
 
@@ -67,10 +70,12 @@ const ReservationPage: React.FC = () => {
   const [orderDate, setOrderDate] = useState<string>("");
   const [orderHour, setOrderHour] = useState<string>("");
   const [reservation, setReservation] = useState<Reservation | null>(null);
-  const { user, token, fetchUser } = useAuth();
+  const { user, token, fetchUser, logout } = useAuth();
   const [loading, setLoading] = useState<boolean>(false);
   const pickupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user?.id) {
@@ -257,314 +262,356 @@ const ReservationPage: React.FC = () => {
             e.currentTarget.style.backgroundColor = "transparent";
             e.currentTarget.style.color = BOLT_GREEN;
           }}
-          onClick={() => {
-            window.location.href = "/devenir-partenaire"; // Change URL here
-          }}
+          onClick={() => setShowModal(true)}
           aria-label="Devenir partenaire"
         >
           Devenir partenaire
         </button>
+   {user?.role ==="admin" &&(
+         <button
+          type="button"
+          className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
+          style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = BOLT_GREEN;
+            e.currentTarget.style.color = "white";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "transparent";
+            e.currentTarget.style.color = BOLT_GREEN;
+          }}
+          onClick={() => navigate('/dashboard')}
+          aria-label="Dashboard"
+        >
+          Dashboard
+        </button>
+        )}
+
+        <button
+  type="button"
+  className="px-6 py-2 rounded border-2 font-semibold transition-colors duration-200"
+  style={{ borderColor: BOLT_GREEN, color: BOLT_GREEN }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = BOLT_GREEN;
+    e.currentTarget.style.color = "white";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = "transparent";
+    e.currentTarget.style.color = BOLT_GREEN;
+  }}
+  onClick={() => {
+    // Your logout logic here, for example:
+    // clear auth tokens, call logout API, then redirect
+    // Example redirect:
+      logout()
+  }}
+  aria-label="Logout"
+>
+  Logout
+</button>
+
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 w-full">
-        {/* Map */}
-        <div className="w-full md:w-1/2 h-[600px] rounded-lg overflow-hidden shadow-md border border-gray-200">
+      {/* Reservation & Form */}
+      <div className="w-full max-w-5xl mx-auto space-y-6">
+        {/* Reservation Status */}
+        {reservation && (
+          <motion.div
+            className="bg-white shadow-lg rounded-lg p-6 border border-gray-200"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2
+                className="text-xl font-bold flex items-center gap-2"
+                style={{ color: BOLT_DARK_GREY }}
+              >
+                <FaClock /> Statut de la commande
+              </h2>
+              <span
+                className={`px-3 py-1 font-semibold rounded-full text-sm uppercase`}
+                style={{
+                  backgroundColor:
+                    reservation.status === "accepted"
+                      ? BOLT_GREEN_LIGHT
+                      : reservation.status === "completed"
+                      ? "#cce5ff"
+                      : "#fff3cd",
+                  color:
+                    reservation.status === "accepted"
+                      ? BOLT_GREEN
+                      : reservation.status === "completed"
+                      ? "#004085"
+                      : "#856404",
+                }}
+              >
+                {reservation.status}
+              </span>
+            </div>
+            <div className="text-sm space-y-2 text-gray-700">
+              <p>
+                <FaMapMarkerAlt
+                  className="inline mr-2"
+                  style={{ color: BOLT_GREEN }}
+                />{" "}
+                Départ : {reservation.pickupLocation}
+              </p>
+              <p>
+                <FaRoute
+                  className="inline mr-2"
+                  style={{ color: BOLT_GREEN }}
+                />{" "}
+                Destination : {reservation.dropLocation}
+              </p>
+              <p>
+                Heure :{" "}
+                <span style={{ color: BOLT_GREEN }}>{reservation.orderHour}</span>
+              </p>
+              <p>
+                Date :{" "}
+                <span style={{ color: BOLT_GREEN }}>
+                  {new Date(reservation.orderDate).toDateString()}
+                </span>
+              </p>
+              <p>Durée : {reservation.duration} min</p>
+              <p>Prix : {reservation.price.toLocaleString()} FCFA</p>
+            </div>
+            <div className="mt-4 text-sm border-t pt-2 border-gray-200">
+              <h3 className="font-semibold" style={{ color: BOLT_DARK_GREY }}>
+                Détails du partenaire
+              </h3>
+              <p>Véhicule : {reservation.partner.carName}</p>
+              <p>Immatriculation : {reservation.partner.plaqueNumber}</p>
+              <p>Téléphone : {reservation.partner.tel}</p>
+              <p>Ville : {reservation.partner.city}</p>
+            </div>
+            <div className="mt-4 flex gap-3">
+              {reservation.status === "pending" && (
+                <button
+                  onClick={handleAccept}
+                  className="px-4 py-2 rounded flex items-center gap-2 font-semibold transition"
+                  style={{
+                    backgroundColor: BOLT_GREEN,
+                    color: "white",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      "#009933";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      BOLT_GREEN;
+                  }}
+                >
+                  <FaCheckCircle /> Accepter
+                </button>
+              )}
+              {reservation.status === "accepted" && (
+                <button
+                  onClick={handleComplete}
+                  className="px-4 py-2 rounded flex items-center gap-2 font-semibold transition"
+                  style={{
+                    backgroundColor: "#444",
+                    color: "white",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      "#222";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      "#444";
+                  }}
+                >
+                  <FaTimesCircle /> Terminer
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Booking Form */}
+        <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-200 max-h-[520px] overflow-y-auto">
+          <h2
+            className="text-2xl font-bold mb-6"
+            style={{ color: BOLT_DARK_GREY }}
+          >
+            Nouvelle Réservation
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative">
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: BOLT_DARK_GREY }}
+              >
+                Point de départ
+              </label>
+              <input
+                type="text"
+                value={pickup}
+                onChange={(e) => setPickup(e.target.value)}
+                placeholder="Entrez votre point de départ"
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                style={{
+                  borderColor: "#ccc",
+                  boxShadow: `0 0 0 3px transparent`,
+                }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                }
+                onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                required
+              />
+              {pickupSuggestions.length > 0 && (
+                <ul
+                  className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto"
+                  style={{ borderColor: "#ccc" }}
+                >
+                  {pickupSuggestions.map((place, idx) => (
+                    <li
+                      key={idx}
+                      onClick={() => selectPickup(place)}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {place}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="relative">
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: BOLT_DARK_GREY }}
+              >
+                Destination
+              </label>
+              <input
+                type="text"
+                value={drop}
+                onChange={(e) => setDrop(e.target.value)}
+                placeholder="Entrez votre destination"
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                style={{
+                  borderColor: "#ccc",
+                  boxShadow: `0 0 0 3px transparent`,
+                }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                }
+                onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                required
+              />
+              {dropSuggestions.length > 0 && (
+                <ul
+                  className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto"
+                  style={{ borderColor: "#ccc" }}
+                >
+                  {dropSuggestions.map((place, idx) => (
+                    <li
+                      key={idx}
+                      onClick={() => selectDrop(place)}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {place}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: BOLT_DARK_GREY }}
+              >
+                Heure
+              </label>
+              <input
+                type="time"
+                value={orderHour}
+                onChange={(e) => setOrderHour(e.target.value)}
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                style={{
+                  borderColor: "#ccc",
+                  boxShadow: `0 0 0 3px transparent`,
+                }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                }
+                onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: BOLT_DARK_GREY }}
+              >
+                Date
+              </label>
+              <input
+                type="date"
+                value={orderDate}
+                onChange={(e) => setOrderDate(e.target.value)}
+                className="w-full border rounded-lg px-4 py-2 focus:outline-none"
+                style={{
+                  borderColor: "#ccc",
+                  boxShadow: `0 0 0 3px transparent`,
+                }}
+                onFocus={(e) =>
+                  (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
+                }
+                onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
+              style={{
+                backgroundColor: BOLT_GREEN,
+                color: "white",
+              }}
+              disabled={loading}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  "#009933";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                  BOLT_GREEN;
+              }}
+            >
+              <AiOutlineUser size={20} />{" "}
+              {loading ? "Commande en cours..." : "Réserver maintenant"}
+            </button>
+          </form>
+        </div>
+
+        {/* Map below form */}
+        <div className="w-full h-[450px] rounded-lg overflow-hidden shadow-md border border-gray-200 mt-6">
           <MapContainer
             center={NAIROBI_COORDINATES}
             zoom={13}
             className="h-full w-full"
           >
-            <TileLayer
-              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+  <TileLayer
+    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+  />
+
             <Marker position={NAIROBI_COORDINATES}>
               <Popup>Votre position actuelle</Popup>
             </Marker>
           </MapContainer>
         </div>
-
-        {/* Reservation & Form */}
-        <div className="w-full md:w-1/2 space-y-6 overflow-y-auto">
-          {/* Reservation Status */}
-          {reservation && (
-            <motion.div
-              className="bg-white shadow-lg rounded-lg p-6 border border-gray-200"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2
-                  className="text-xl font-bold flex items-center gap-2"
-                  style={{ color: BOLT_DARK_GREY }}
-                >
-                  <FaClock /> Statut de la commande
-                </h2>
-                <span
-                  className={`px-3 py-1 font-semibold rounded-full text-sm uppercase`}
-                  style={{
-                    backgroundColor:
-                      reservation.status === "accepted"
-                        ? BOLT_GREEN_LIGHT
-                        : reservation.status === "completed"
-                        ? "#cce5ff"
-                        : "#fff3cd",
-                    color:
-                      reservation.status === "accepted"
-                        ? BOLT_GREEN
-                        : reservation.status === "completed"
-                        ? "#004085"
-                        : "#856404",
-                  }}
-                >
-                  {reservation.status}
-                </span>
-              </div>
-              <div className="text-sm space-y-2 text-gray-700">
-                <p>
-                  <FaMapMarkerAlt
-                    className="inline mr-2"
-                    style={{ color: BOLT_GREEN }}
-                  />{" "}
-                  Départ : {reservation.pickupLocation}
-                </p>
-                <p>
-                  <FaRoute
-                    className="inline mr-2"
-                    style={{ color: BOLT_GREEN }}
-                  />{" "}
-                  Destination : {reservation.dropLocation}
-                </p>
-                <p>
-                  Heure :{" "}
-                  <span style={{ color: BOLT_GREEN }}>{reservation.orderHour}</span>
-                </p>
-                <p>
-                  Date :{" "}
-                  <span style={{ color: BOLT_GREEN }}>
-                    {new Date(reservation.orderDate).toDateString()}
-                  </span>
-                </p>
-                <p>Durée : {reservation.duration} min</p>
-                <p>Prix : {reservation.price.toLocaleString()} FCFA</p>
-              </div>
-              <div className="mt-4 text-sm border-t pt-2 border-gray-200">
-                <h3 className="font-semibold" style={{ color: BOLT_DARK_GREY }}>
-                  Détails du partenaire
-                </h3>
-                <p>Véhicule : {reservation.partner.carName}</p>
-                <p>Immatriculation : {reservation.partner.plaqueNumber}</p>
-                <p>Téléphone : {reservation.partner.tel}</p>
-                <p>Ville : {reservation.partner.city}</p>
-              </div>
-              <div className="mt-4 flex gap-3">
-                {reservation.status === "pending" && (
-                  <button
-                    onClick={handleAccept}
-                    className="px-4 py-2 rounded flex items-center gap-2 font-semibold transition"
-                    style={{
-                      backgroundColor: BOLT_GREEN,
-                      color: "white",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                        "#009933";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                        BOLT_GREEN;
-                    }}
-                  >
-                    <FaCheckCircle /> Accepter
-                  </button>
-                )}
-                {reservation.status === "accepted" && (
-                  <button
-                    onClick={handleComplete}
-                    className="px-4 py-2 rounded flex items-center gap-2 font-semibold transition"
-                    style={{
-                      backgroundColor: "#444",
-                      color: "white",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                        "#222";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                        "#444";
-                    }}
-                  >
-                    <FaTimesCircle /> Terminer
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Booking Form */}
-          <div className="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
-            <h2
-              className="text-2xl font-bold mb-6"
-              style={{ color: BOLT_DARK_GREY }}
-            >
-              Nouvelle Réservation
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="relative">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: BOLT_DARK_GREY }}
-                >
-                  Point de départ
-                </label>
-                <input
-                  type="text"
-                  value={pickup}
-                  onChange={(e) => setPickup(e.target.value)}
-                  placeholder="Entrez votre point de départ"
-                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
-                  style={{
-                    borderColor: "#ccc",
-                    boxShadow: `0 0 0 3px transparent`,
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
-                  }
-                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                  required
-                />
-                {pickupSuggestions.length > 0 && (
-                  <ul
-                    className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto"
-                    style={{ borderColor: "#ccc" }}
-                  >
-                    {pickupSuggestions.map((place, idx) => (
-                      <li
-                        key={idx}
-                        onClick={() => selectPickup(place)}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      >
-                        {place}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div className="relative">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: BOLT_DARK_GREY }}
-                >
-                  Destination
-                </label>
-                <input
-                  type="text"
-                  value={drop}
-                  onChange={(e) => setDrop(e.target.value)}
-                  placeholder="Entrez votre destination"
-                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
-                  style={{
-                    borderColor: "#ccc",
-                    boxShadow: `0 0 0 3px transparent`,
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
-                  }
-                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                  required
-                />
-                {dropSuggestions.length > 0 && (
-                  <ul
-                    className="absolute z-20 bg-white border border-gray-200 w-full mt-1 rounded-lg max-h-40 overflow-y-auto"
-                    style={{ borderColor: "#ccc" }}
-                  >
-                    {dropSuggestions.map((place, idx) => (
-                      <li
-                        key={idx}
-                        onClick={() => selectDrop(place)}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      >
-                        {place}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: BOLT_DARK_GREY }}
-                >
-                  Heure
-                </label>
-                <input
-                  type="time"
-                  value={orderHour}
-                  onChange={(e) => setOrderHour(e.target.value)}
-                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
-                  style={{
-                    borderColor: "#ccc",
-                    boxShadow: `0 0 0 3px transparent`,
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
-                  }
-                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                  required
-                />
-              </div>
-
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  style={{ color: BOLT_DARK_GREY }}
-                >
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={orderDate}
-                  onChange={(e) => setOrderDate(e.target.value)}
-                  className="w-full border rounded-lg px-4 py-2 focus:outline-none"
-                  style={{
-                    borderColor: "#ccc",
-                    boxShadow: `0 0 0 3px transparent`,
-                  }}
-                  onFocus={(e) =>
-                    (e.currentTarget.style.boxShadow = `0 0 0 3px ${BOLT_GREEN}66`)
-                  }
-                  onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition"
-                style={{
-                  backgroundColor: BOLT_GREEN,
-                  color: "white",
-                }}
-                disabled={loading}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                    "#009933";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                    BOLT_GREEN;
-                }}
-              >
-                <AiOutlineUser size={20} />{" "}
-                {loading ? "Commande en cours..." : "Réserver maintenant"}
-              </button>
-            </form>
-          </div>
-        </div>
       </div>
+
+      <CreatePartnerModal visible={showModal} onClose={() => setShowModal(false)} />
       <ToastContainer position="bottom-right" />
     </main>
   );
