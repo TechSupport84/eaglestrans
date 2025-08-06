@@ -60,7 +60,7 @@ const BOLT_GREEN = "#00B140";
 const BOLT_GREEN_LIGHT = "#e6f4ea";
 const BOLT_DARK_GREY = "#333333";
 
-const NAIROBI_COORDINATES: [number, number] = [-1.286389, 36.817223];
+const YAMOUSSOUKRO_COORDINATES :[number, number]= [6.8276, -5.2893];
 
 const ReservationPage: React.FC = () => {
   const [pickup, setPickup] = useState<string>("");
@@ -607,20 +607,22 @@ const ReservationPage: React.FC = () => {
 
         {/* Map below form */}
         <div className="w-full h-[450px] rounded-lg overflow-hidden shadow-md border border-gray-200 mt-6">
-          <MapContainer
-            center={NAIROBI_COORDINATES}
-            zoom={13}
-            className="h-full w-full"
-          >
+
+
+<MapContainer
+  center={YAMOUSSOUKRO_COORDINATES}
+  zoom={13}
+  className="h-full w-full"
+>
   <TileLayer
     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
     attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
   />
 
-            <Marker position={NAIROBI_COORDINATES}>
-              <Popup>Votre position actuelle</Popup>
-            </Marker>
-          </MapContainer>
+  <Marker position={YAMOUSSOUKRO_COORDINATES}>
+    <Popup>Vous êtes à Yamoussoukro 🇨🇮</Popup>
+  </Marker>
+</MapContainer>
         </div>
       </div>
 
